@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Quicksand } from "next/font/google";
 import "./globals.css";
+import { ApolloWrapper } from "../lib/apollo/wrapper";
+import Providers from "@/components/ui/providers";
+import CustomToaster from "../components/custom-toaster";
 
-const inter = Inter({ subsets: ["latin"] });
+const quicksand = Quicksand({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -16,7 +19,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={quicksand.className}>
+        <Providers>
+          <ApolloWrapper>
+            {children}
+            <CustomToaster />
+          </ApolloWrapper>
+        </Providers>
+      </body>
     </html>
   );
 }

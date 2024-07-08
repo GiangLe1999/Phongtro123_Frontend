@@ -1,0 +1,16 @@
+export const pageLinks = {
+  home: "/",
+  login: "/dang-nhap-tai-khoan",
+  register: "/dang-ky-tai-khoan",
+  forgot_password: "/quen-mat-khau",
+  bookmarks: "/tin-da-luu",
+  post: "/quan-ly/dang-tin-moi",
+  room_postings: "/cho-thue-phong-tro",
+  home_postings: "/nha-cho-thue",
+  apartment_postings: "/cho-thue-can-ho",
+  ground_postings: "/cho-thue-mat-bang",
+  search_partners: "/tim-nguoi-o-ghep",
+  news: "/blog",
+  pricing: "/bang-gia-dich-vu",
+  dashboard: "/quan-ly",
+};
