@@ -2,6 +2,7 @@ export const pageLinks = {
   home: "/",
   login: "/dang-nhap-tai-khoan",
   register: "/dang-ky-tai-khoan",
+  verify: "/xac-thuc-tai-khoan",
   forgot_password: "/quen-mat-khau",
   bookmarks: "/tin-da-luu",
   post: "/quan-ly/dang-tin-moi",

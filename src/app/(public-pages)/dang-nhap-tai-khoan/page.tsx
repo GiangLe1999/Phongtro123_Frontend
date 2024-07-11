@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { pageLinks } from "@/src/constants";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   tel: z
@@ -41,6 +43,7 @@ const formSchema = z.object({
 interface Props {}
 
 const Page: NextPage<Props> = () => {
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,12 +52,29 @@ const Page: NextPage<Props> = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    signIn("credentials", {
-      redirect: false,
-      tel: values.tel,
-      password: values.password,
-    });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const result = await signIn("credentials", {
+        redirect: false,
+        tel: values.tel,
+        password: values.password,
+      });
+
+      if (result?.ok) {
+        toast.success("Đăng nhập thành công", {
+          description: "Tiến hành chuyển hướng tới Trang chủ.",
+        });
+        router.replace(pageLinks.home);
+      } else {
+        toast.error(result?.error, {
+          description: "Vui lòng kiểm tra lại thông tin đăng nhập.",
+        });
+      }
+    } catch (error) {
+      toast.error("Đăng nhập thất bại", {
+        description: "Chúng tôi sẽ sớm khắc phục vấn đề.",
+      });
+    }
   }
 
   return (

@@ -1,13 +1,33 @@
+import { LoginInput } from "./../../../../__generated__/graphql";
 import { getClient } from "@/src/lib/apollo/client";
-import { pageLinks } from "@/src/constants";
 import { gql } from "@apollo/client";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import NextAuth from "next-auth/next";
+import { pageLinks } from "@/src/constants";
 
 const LOGIN_MUTATION = gql`
   mutation login($loginInput: LoginInput!) {
     login(loginInput: $loginInput) {
+      ok
+      accessToken
+      refreshToken
+      expiresIn
+      user {
+        id
+        tel
+        name
+        role
+        verified
+      }
+      error
+    }
+  }
+`;
+
+const REFRESH_TOKEN_MUTATION = gql`
+  mutation refreshToken {
+    refreshToken {
       ok
       accessToken
       refreshToken
@@ -21,25 +41,33 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {},
-      async authorize(credentials, req) {
-        if (!credentials?.tel || !credentials?.password) return null; // Fix condition check
-        const { tel, password } = credentials;
+      async authorize(credentials, req): Promise<any> {
+        const { tel, password } = credentials as LoginInput;
+        if (!tel || !password) return null;
+
         const client = getClient();
         try {
-          const {
-            data: { login },
-          } = await client.mutate({
+          const { data } = await client.mutate({
             mutation: LOGIN_MUTATION,
             variables: {
               loginInput: {
                 tel,
                 password,
-              },
+              } as LoginInput,
             },
           });
 
-          if (login && login.ok && login.user) {
-            return login.user;
+          console.log(data);
+
+          if (data?.login?.ok && data?.login?.user) {
+            return {
+              user: { ...data?.login?.user },
+              backendTokens: {
+                accessToken: data?.login?.accessToken,
+                refreshToken: data?.login?.refreshToken,
+                expiresIn: data?.login?.expiresIn,
+              },
+            };
           } else {
             return null;
           }
@@ -50,6 +78,48 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) return { ...token, ...user };
+      // Access token vẫn còn hạn
+      if (new Date().getTime() < token.backendTokens.expiresIn) {
+        return token;
+      }
+      // Nếu không thì tiến hành refresh Token
+      const client = getClient();
+      const { data } = await client.mutate({
+        mutation: REFRESH_TOKEN_MUTATION,
+        context: {
+          headers: {
+            Authorization: `Refresh ${token.backendTokens.refreshToken}`,
+          },
+        },
+      });
+      return {
+        ...token,
+        backendTokens: {
+          accessToken: data?.refreshToken?.accessToken,
+          refreshToken: data?.refreshToken?.refreshToken,
+          expiresIn: data?.refreshToken?.expiresIn,
+        },
+      };
+    },
+    async session({ session, token }) {
+      session.user = token.user;
+      session.backendTokens = token.backendTokens;
+      return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // Customize redirect behavior here
+      if (url.startsWith(baseUrl)) {
+        // Allow the redirect if the URL is on the same domain
+        return url;
+      } else {
+        // Otherwise, redirect to the homepage or another safe URL
+        return baseUrl;
+      }
+    },
+  },
   pages: {
     signIn: pageLinks.login,
   },

@@ -23,10 +23,10 @@ const CustomToaster: FC<Props> = (props): JSX.Element => {
         },
       }}
       icons={{
-        success: <CircleCheckBigIcon size={18} />,
-        info: <InfoIcon size={18} />,
-        warning: <CircleAlertIcon size={18} />,
-        error: <CircleXIcon size={18} />,
+        success: <CircleCheckBigIcon size={18} className="-mt-3" />,
+        info: <InfoIcon size={18} className="-mt-3" />,
+        warning: <CircleAlertIcon size={18} className="-mt-3" />,
+        error: <CircleXIcon size={18} className="-mt-3" />,
       }}
     />
   );

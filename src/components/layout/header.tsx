@@ -67,6 +67,8 @@ const Header: FC<Props> = (props): JSX.Element => {
   const pathname = usePathname();
   const { data: session } = useSession();
 
+  console.log(session);
+
   const topRightItems =
     session && session.user ? loggedInTopRightItems : defaultTopRightItems;
 

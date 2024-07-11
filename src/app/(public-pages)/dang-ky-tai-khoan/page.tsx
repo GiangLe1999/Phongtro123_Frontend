@@ -99,15 +99,11 @@ const Page: NextPage<Props> = () => {
       if (data?.createUser?.ok) {
         toast.success("Đăng ký tài khoản thành công", {
           description: "Vui lòng đăng nhập vào tài khoản để sử dụng.",
-          action: {
-            label: "Okay",
-            onClick: () => {},
-          },
         });
         router.replace(pageLinks.login);
       } else {
         toast.error(data?.createUser?.error, {
-          description: "Vui lòng nhập SĐT hợp lệ.",
+          description: "Vui lòng kiểm tra lại thông tin đăng ký.",
           action: {
             label: "Okay",
             onClick: form.setFocus("tel") as any,
@@ -117,10 +113,6 @@ const Page: NextPage<Props> = () => {
     } catch (error) {
       toast.error("Đăng ký tài khoản thất bại", {
         description: "Chúng tôi sẽ sớm khắc phục vấn đề.",
-        action: {
-          label: "Okay",
-          onClick: () => {},
-        },
       });
     }
   };
