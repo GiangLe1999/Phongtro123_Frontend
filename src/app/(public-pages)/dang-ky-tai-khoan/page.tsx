@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Link from "next/link";
-import { pageLinks } from "@/src/constants";
+import { pageLinks, regexes } from "@/src/constants";
 import { gql, useMutation } from "@apollo/client";
 import { Loader2 } from "lucide-react";
 import {
@@ -26,30 +26,26 @@ import {
 } from "@/src/__generated__/graphql";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import CustomBreadcrumb from "@/src/components/custom-breadcrumb";
 
 const formSchema = z.object({
   name: z
     .string()
     .min(2, { message: "Họ tên phải có ít nhất 2 kí tự." })
     .max(50, { message: "Họ tên chỉ chứa tối đa 50 kí tự." })
-    .regex(/^[a-zA-Z\s]+$/, {
+    .regex(regexes.name, {
       message: "Họ tên chỉ chứa chữ cái và khoảng trắng.",
     }),
 
-  tel: z
-    .string()
-    .regex(
-      /(([03+[2-9]|05+[6|8|9]|07+[0|6|7|8|9]|08+[1-9]|09+[1-4|6-9]]){3})+[0-9]{7}\b/g,
-      {
-        message: "Số điện thoại không hợp lệ",
-      }
-    ),
+  tel: z.string().regex(regexes.tel, {
+    message: "Số điện thoại không hợp lệ",
+  }),
 
   password: z
     .string()
     .min(6, { message: "Mật khẩu phải có ít nhất 6 kí tự." })
     .max(50, { message: "Mật khẩu phải chỉ chứa tối đa 50 kí tự." })
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,50}$/, {
+    .regex(regexes.password, {
       message:
         "Mật khẩu phải chứa ít nhất 1 chữ cái, 1 chữ số và 1 kí tự đặc biệt.",
     }),
@@ -119,7 +115,13 @@ const Page: NextPage<Props> = () => {
 
   return (
     <div className="bg-background min-h-screen">
-      <main className="max-w-[600px] mx-auto py-16">
+      <div className="max-w-[600px] mx-auto pt-8">
+        <CustomBreadcrumb
+          pages={[{ name: "Đăng ký", link: "/dang-ky-tai-khoan" }]}
+        />
+      </div>
+
+      <main className="max-w-[600px] mx-auto pt-8 pb-16">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -235,10 +237,10 @@ const Page: NextPage<Props> = () => {
               )}
             />
 
-            <Button type="submit" className="w-full font-bold">
+            <Button type="submit" className="w-full font-bold gap-1">
               {loading ? (
                 <>
-                  <Loader2 className="animate-spin" />
+                  <Loader2 className="animate-spin" /> Đang xử lý...
                 </>
               ) : (
                 "Tạo tài khoản"

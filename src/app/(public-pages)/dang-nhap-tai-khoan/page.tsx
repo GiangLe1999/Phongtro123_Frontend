@@ -15,26 +15,25 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import { pageLinks } from "@/src/constants";
+import { pageLinks, regexes } from "@/src/constants";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import CustomBreadcrumb from "@/src/components/custom-breadcrumb";
+import useGetUserForClient from "@/src/hooks/use-get-user-for-client";
 
 const formSchema = z.object({
-  tel: z
-    .string()
-    .regex(
-      /(([03+[2-9]|05+[6|8|9]|07+[0|6|7|8|9]|08+[1-9]|09+[1-4|6-9]]){3})+[0-9]{7}\b/g,
-      {
-        message: "Số điện thoại không hợp lệ",
-      }
-    ),
+  tel: z.string().regex(regexes.tel, {
+    message: "Số điện thoại không hợp lệ",
+  }),
 
   password: z
     .string()
     .min(6, { message: "Mật khẩu phải có ít nhất 6 kí tự." })
     .max(50, { message: "Mật khẩu phải chỉ chứa tối đa 50 kí tự." })
-    .regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,50}$/, {
+    .regex(regexes.password, {
       message:
         "Mật khẩu phải chứa ít nhất 1 chữ cái, 1 chữ số và 1 kí tự đặc biệt.",
     }),
@@ -44,6 +43,9 @@ interface Props {}
 
 const Page: NextPage<Props> = () => {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const user = useGetUserForClient();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -53,6 +55,7 @@ const Page: NextPage<Props> = () => {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
     try {
       const result = await signIn("credentials", {
         redirect: false,
@@ -66,7 +69,7 @@ const Page: NextPage<Props> = () => {
         });
         router.replace(pageLinks.home);
       } else {
-        toast.error(result?.error, {
+        toast.error("Đăng nhập thất bại", {
           description: "Vui lòng kiểm tra lại thông tin đăng nhập.",
         });
       }
@@ -75,11 +78,22 @@ const Page: NextPage<Props> = () => {
         description: "Chúng tôi sẽ sớm khắc phục vấn đề.",
       });
     }
+    setLoading(false);
+  }
+
+  if (user) {
+    router.replace(pageLinks.home);
   }
 
   return (
     <div className="bg-background min-h-screen">
-      <main className="max-w-[600px] mx-auto py-16">
+      <div className="max-w-[600px] mx-auto pt-8">
+        <CustomBreadcrumb
+          pages={[{ name: "Đăng nhập", link: "/dang-nhap-tai-khoan" }]}
+        />
+      </div>
+
+      <main className="max-w-[600px] mx-auto  pt-8 pb-16">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -129,8 +143,14 @@ const Page: NextPage<Props> = () => {
               )}
             />
 
-            <Button type="submit" className="w-full font-bold">
-              Đăng nhập
+            <Button type="submit" className="w-full font-bold gap-1">
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" /> Đang xử lý...
+                </>
+              ) : (
+                "Đăng nhập"
+              )}
             </Button>
 
             <div className="text-xs text-gray-500 flex justify-between gap-2">

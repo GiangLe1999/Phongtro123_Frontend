@@ -7,6 +7,7 @@ declare module "next-auth" {
       tel: string;
       name: string;
       role: RoleType;
+      verified: boolean;
     };
     backendTokens: {
       accessToken: string;
@@ -23,6 +24,7 @@ declare module "next-auth/jwt" {
       tel: string;
       name: string;
       role: RoleType;
+      verified: boolean;
     };
     backendTokens: {
       accessToken: string;

@@ -57,8 +57,6 @@ export const authOptions: NextAuthOptions = {
             },
           });
 
-          console.log(data);
-
           if (data?.login?.ok && data?.login?.user) {
             return {
               user: { ...data?.login?.user },
@@ -79,7 +77,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // Sau khi người dùng xác thực thành công thì update được trigger
+      // Detect event update và update field verifed của token
+      if (trigger === "update" && session) {
+        token.user.verified = session.user.verified;
+        return token;
+      }
+
       if (user) return { ...token, ...user };
       // Access token vẫn còn hạn
       if (new Date().getTime() < token.backendTokens.expiresIn) {
