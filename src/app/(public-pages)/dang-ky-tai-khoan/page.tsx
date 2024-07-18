@@ -82,7 +82,13 @@ const Page: NextPage<Props> = () => {
   const [registerMutation, { loading }] = useMutation<
     CreateUserMutation,
     CreateUserMutationVariables
-  >(REGISTER_MUTATION);
+  >(REGISTER_MUTATION, {
+    context: {
+      headers: {
+        "Apollo-Require-Preflight": "true",
+      },
+    },
+  });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
