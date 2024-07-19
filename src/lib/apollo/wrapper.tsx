@@ -16,13 +16,17 @@ function makeClient() {
     fetchOptions: { cache: "no-store" },
   });
 
-  const authLink: ApolloLink = setContext(async () => {
+  const authLink: ApolloLink = setContext(async (_: any, { headers }: any) => {
     const session = await getSession();
-    return {
+    const modifiedHeader = {
       headers: {
-        Authorization: `Bearer ${session?.backendTokens.accessToken}`,
+        ...headers,
+        authorization: session?.backendTokens?.accessToken
+          ? `Bearer ${session.backendTokens.accessToken}`
+          : "",
       },
     };
+    return modifiedHeader;
   });
 
   return new ApolloClient({
