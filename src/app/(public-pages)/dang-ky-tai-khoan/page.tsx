@@ -86,7 +86,6 @@ const Page: NextPage<Props> = () => {
     context: {
       headers: {
         "apollo-require-preflight": true,
-        "content-type": "application/x-www-form-urlencoded",
       },
     },
   });
