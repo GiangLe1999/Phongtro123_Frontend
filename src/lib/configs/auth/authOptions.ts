@@ -1,6 +1,6 @@
 import { LoginInput } from "@/src/__generated__/graphql";
 import { pageLinks } from "@/src/constants";
-import { getClient } from "@/src/lib/apollo/client";
+import client from "@/src/lib/apollo/client";
 import { gql } from "@apollo/client";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -44,7 +44,6 @@ const authOptions: NextAuthOptions = {
         const { tel, password } = credentials as LoginInput;
         if (!tel || !password) return null;
 
-        const client = getClient();
         try {
           const { data } = await client.mutate({
             mutation: LOGIN_MUTATION,
@@ -90,7 +89,6 @@ const authOptions: NextAuthOptions = {
         return token;
       }
       // Nếu không thì tiến hành refresh Token
-      const client = getClient();
       const { data } = await client.mutate({
         mutation: REFRESH_TOKEN_MUTATION,
         context: {
