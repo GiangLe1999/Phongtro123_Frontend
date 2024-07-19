@@ -85,7 +85,8 @@ const Page: NextPage<Props> = () => {
   >(REGISTER_MUTATION, {
     context: {
       headers: {
-        "Apollo-Require-Preflight": "true",
+        "apollo-require-preflight": true,
+        "content-type": "application/x-www-form-urlencoded",
       },
     },
   });
