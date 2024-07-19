@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { redirect } from "next/navigation";
 import useGetUserForClient from "@/src/hooks/use-get-user-for-client";
 import { pageLinks } from "@/src/constants";
@@ -10,7 +10,7 @@ const IsVerified = (Component: any) => {
     const user = useGetUserForClient();
     const isVerified = user?.verified;
 
-    useEffect(() => {
+    useLayoutEffect(() => {
       if (!isVerified) {
         return redirect(pageLinks.verify);
       }

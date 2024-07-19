@@ -1,4 +1,4 @@
-import { HttpLink, makeVar } from "@apollo/client";
+import { HttpLink } from "@apollo/client";
 import {
   registerApolloClient,
   ApolloClient,
@@ -14,9 +14,6 @@ export const { getClient, query, PreloadQuery } = registerApolloClient(() => {
       // you can disable result caching here if you want to
       // (this does not work if you are rendering your page with `export const dynamic = "force-static"`)
       // fetchOptions: { cache: "no-store" },
-      fetchOptions: {
-        mode: "no-cors",
-      },
     }),
   });
 });

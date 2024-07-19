@@ -42,24 +42,13 @@ const formSchema = z.object({
 interface Props {
   user: Session["user"] | null;
   setActiveForm: Dispatch<SetStateAction<string>>;
-  session: Session | null;
 }
 
-const SendOtpForm: FC<Props> = ({
-  user,
-  setActiveForm,
-  session,
-}): JSX.Element => {
+const SendOtpForm: FC<Props> = ({ user, setActiveForm }): JSX.Element => {
   const [sendOtpMutation, { loading }] = useMutation<
     SendOtpMutation,
     SendOtpMutationVariables
-  >(SEND_OTP_MUTATION, {
-    context: {
-      headers: {
-        Authorization: `Bearer ${session?.backendTokens.accessToken}`,
-      },
-    },
-  });
+  >(SEND_OTP_MUTATION);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

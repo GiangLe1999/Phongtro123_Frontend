@@ -1,28 +1,30 @@
-// pages/api/middleware.ts
-
-import { NextApiResponse, NextApiRequest } from "next";
 import { getToken } from "next-auth/jwt";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { pageLinks } from "./constants";
 
-export default async function middleware(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export async function middleware(req: NextRequest) {
   try {
     // Get the token from session
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
+    const url = req.nextUrl.clone();
     if (token) {
-      // Attach the token to the request headers
-      req.headers[
-        "Authorization"
-      ] = `Bearer ${token.backendTokens.accessToken}`;
+      if (!token.user.verified) {
+        url.pathname = pageLinks.verify;
+        return NextResponse.redirect(url);
+      }
+    } else {
+      url.pathname = pageLinks.login;
+      return NextResponse.redirect(url);
     }
 
-    // Continue to the next handler
     return NextResponse.next();
   } catch (error) {
     console.error("Middleware error:", error);
-    throw error;
+    return NextResponse.next();
   }
 }
+
+export const config = {
+  matcher: ["/quan-ly/:path*"],
+};

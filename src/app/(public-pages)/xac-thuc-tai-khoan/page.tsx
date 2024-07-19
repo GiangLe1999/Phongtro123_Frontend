@@ -15,7 +15,7 @@ interface Props {}
 
 const Page: NextPage<Props> = () => {
   const user = useGetUserForClient();
-  const { data: session, update: updateSession } = useSession();
+
   const isVerified = user?.verified;
   const router = useRouter();
 
@@ -39,17 +39,9 @@ const Page: NextPage<Props> = () => {
             Xác thực tài khoản
           </h1>
           {activeForm === "send-otp-form" ? (
-            <SendOtpForm
-              user={user}
-              setActiveForm={setActiveForm}
-              session={session}
-            />
+            <SendOtpForm user={user} setActiveForm={setActiveForm} />
           ) : activeForm === "fill-otp-form" ? (
-            <FillOtpForm
-              user={user}
-              session={session}
-              updateSession={updateSession}
-            />
+            <FillOtpForm user={user} />
           ) : null}
 
           <p className="text-sm leading-7">

@@ -33,6 +33,7 @@ import {
 } from "@/src/__generated__/graphql";
 import { useRouter } from "next/navigation";
 import { pageLinks } from "@/src/constants";
+import { useSession } from "next-auth/react";
 
 const VERIFY_OTP_MUTATION = gql`
   mutation verifyOtp($verifyOtpInput: VerifyOtpInput!) {
@@ -60,18 +61,13 @@ const FormSchema = z.object({
 
 interface Props {
   user: Session["user"] | null;
-  session: Session | null;
-  updateSession: any;
 }
 
-const FillOtpForm: FC<Props> = ({
-  user,
-  session,
-  updateSession,
-}): JSX.Element => {
+const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
   const [count, setCount] = useState(60);
   const canResendOtp = count === 0;
   const router = useRouter();
+  const { data: session, update: updateSession } = useSession();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -83,24 +79,12 @@ const FillOtpForm: FC<Props> = ({
   const [verifyOtpMution, { loading }] = useMutation<
     VerifyOtpMutation,
     VerifyOtpMutationVariables
-  >(VERIFY_OTP_MUTATION, {
-    context: {
-      headers: {
-        Authorization: `Bearer ${session?.backendTokens.accessToken}`,
-      },
-    },
-  });
+  >(VERIFY_OTP_MUTATION);
 
   const [resendOtpMution, { loading: resendLoading }] = useMutation<
     ResendOtpMutation,
     ResendOtpMutationVariables
-  >(RESEND_OTP_MUTATION, {
-    context: {
-      headers: {
-        Authorization: `Bearer ${session?.backendTokens.accessToken}`,
-      },
-    },
-  });
+  >(RESEND_OTP_MUTATION);
 
   async function onSubmit(formValues: z.infer<typeof FormSchema>) {
     try {
