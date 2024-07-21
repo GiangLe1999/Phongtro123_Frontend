@@ -18,26 +18,27 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
-export type CreateRoomPostingInput = {
-  address: Scalars['String']['input'];
-  area: Scalars['Float']['input'];
-  category: Scalars['String']['input'];
-  createdAt: Scalars['DateTime']['input'];
-  expired_at: Scalars['DateTime']['input'];
-  images: Array<Scalars['String']['input']>;
-  main_content: Scalars['String']['input'];
-  package_type?: PackageType;
-  price: Scalars['Float']['input'];
-  stars: Scalars['Float']['input'];
-  sub_category: Scalars['String']['input'];
-  tenant_type: TentnantType;
-  title: Scalars['String']['input'];
-  updatedAt: Scalars['DateTime']['input'];
-  videos?: InputMaybe<Array<Scalars['String']['input']>>;
+export type Category = {
+  __typename?: 'Category';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  postings: Array<Posting>;
+  slug: Scalars['String']['output'];
 };
 
-export type CreateRoomPostingOutput = {
-  __typename?: 'CreateRoomPostingOutput';
+export type CoreOutput = {
+  __typename?: 'CoreOutput';
+  error?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
+};
+
+export type CreateNewPasswordInput = {
+  password: Scalars['String']['input'];
+  tel: Scalars['String']['input'];
+};
+
+export type CreateNewPasswordOutput = {
+  __typename?: 'CreateNewPasswordOutput';
   error?: Maybe<Scalars['String']['output']>;
   ok: Scalars['Boolean']['output'];
 };
@@ -53,6 +54,15 @@ export type CreateUserOutput = {
   __typename?: 'CreateUserOutput';
   error?: Maybe<Scalars['String']['output']>;
   ok: Scalars['Boolean']['output'];
+};
+
+export type District = {
+  __typename?: 'District';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  postings: Array<Posting>;
+  province: Province;
+  slug: Scalars['String']['output'];
 };
 
 export type LoginInput = {
@@ -72,19 +82,23 @@ export type LoginOutput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  createRoomPosting: CreateRoomPostingOutput;
+  createCategories: CoreOutput;
+  createDistricts: CoreOutput;
+  createNewPassword: CreateNewPasswordOutput;
+  createProvinces: CoreOutput;
   createUser: CreateUserOutput;
   login: LoginOutput;
   refreshToken: LoginOutput;
   resendOtp: SendOtpOutput;
+  sendForgotPasswordOtp: SendOtpOutput;
   sendOtp: SendOtpOutput;
-  updateRoomPosting: RoomPosting;
+  verifyForgotPasswordOtp: VerifyForgotPasswordOutput;
   verifyOtp: VerifyOtpOutput;
 };
 
 
-export type MutationCreateRoomPostingArgs = {
-  createRoomPostingInput: CreateRoomPostingInput;
+export type MutationCreateNewPasswordArgs = {
+  createNewPasswordInput: CreateNewPasswordInput;
 };
 
 
@@ -98,8 +112,13 @@ export type MutationLoginArgs = {
 };
 
 
-export type MutationUpdateRoomPostingArgs = {
-  updateRoomPostingInput: UpdateRoomPostingInput;
+export type MutationSendForgotPasswordOtpArgs = {
+  sendForgotPasswordOtpInput: SendOtpInput;
+};
+
+
+export type MutationVerifyForgotPasswordOtpArgs = {
+  verifyForgotPasswordOtpInput: VerifyForgotPasswordOtpInput;
 };
 
 
@@ -116,9 +135,38 @@ export enum PackageType {
   Vip3 = 'vip3'
 }
 
+export type Posting = {
+  __typename?: 'Posting';
+  address: Scalars['String']['output'];
+  area: Scalars['Float']['output'];
+  category: Category;
+  createdAt: Scalars['DateTime']['output'];
+  district: District;
+  expired_at: Scalars['DateTime']['output'];
+  id: Scalars['Float']['output'];
+  images: Array<Scalars['String']['output']>;
+  main_content: Scalars['String']['output'];
+  package_type: PackageType;
+  price: Scalars['Float']['output'];
+  province: Province;
+  stars: Scalars['Float']['output'];
+  tenant_type: TentnantType;
+  title: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  videos?: Maybe<Array<Scalars['String']['output']>>;
+};
+
+export type Province = {
+  __typename?: 'Province';
+  districts: Array<Posting>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  postings: Array<Posting>;
+  slug: Scalars['String']['output'];
+};
+
 export type Query = {
   __typename?: 'Query';
-  getAll: Array<RoomPosting>;
   me: User;
 };
 
@@ -128,24 +176,8 @@ export enum RoleType {
   Searcher = 'searcher'
 }
 
-export type RoomPosting = {
-  __typename?: 'RoomPosting';
-  address: Scalars['String']['output'];
-  area: Scalars['Float']['output'];
-  category: Scalars['String']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  expired_at: Scalars['DateTime']['output'];
-  id: Scalars['Float']['output'];
-  images: Array<Scalars['String']['output']>;
-  main_content: Scalars['String']['output'];
-  package_type: PackageType;
-  price: Scalars['Float']['output'];
-  stars: Scalars['Float']['output'];
-  sub_category: Scalars['String']['output'];
-  tenant_type: TentnantType;
-  title: Scalars['String']['output'];
-  updatedAt: Scalars['DateTime']['output'];
-  videos?: Maybe<Array<Scalars['String']['output']>>;
+export type SendOtpInput = {
+  tel: Scalars['String']['input'];
 };
 
 export type SendOtpOutput = {
@@ -159,29 +191,6 @@ export enum TentnantType {
   Female = 'female',
   Male = 'male'
 }
-
-export type UpdateRoomPostingData = {
-  address?: InputMaybe<Scalars['String']['input']>;
-  area?: InputMaybe<Scalars['Float']['input']>;
-  category?: InputMaybe<Scalars['String']['input']>;
-  createdAt?: InputMaybe<Scalars['DateTime']['input']>;
-  expired_at?: InputMaybe<Scalars['DateTime']['input']>;
-  images?: InputMaybe<Array<Scalars['String']['input']>>;
-  main_content?: InputMaybe<Scalars['String']['input']>;
-  package_type?: InputMaybe<PackageType>;
-  price?: InputMaybe<Scalars['Float']['input']>;
-  stars?: InputMaybe<Scalars['Float']['input']>;
-  sub_category?: InputMaybe<Scalars['String']['input']>;
-  tenant_type?: InputMaybe<TentnantType>;
-  title?: InputMaybe<Scalars['String']['input']>;
-  updatedAt?: InputMaybe<Scalars['DateTime']['input']>;
-  videos?: InputMaybe<Array<Scalars['String']['input']>>;
-};
-
-export type UpdateRoomPostingInput = {
-  data: UpdateRoomPostingData;
-  id: Scalars['Float']['input'];
-};
 
 export type User = {
   __typename?: 'User';
@@ -197,6 +206,17 @@ export type User = {
   updatedAt: Scalars['DateTime']['output'];
   verified: Scalars['Boolean']['output'];
   zalo?: Maybe<Scalars['Float']['output']>;
+};
+
+export type VerifyForgotPasswordOtpInput = {
+  otp: Scalars['String']['input'];
+  tel: Scalars['String']['input'];
+};
+
+export type VerifyForgotPasswordOutput = {
+  __typename?: 'VerifyForgotPasswordOutput';
+  error?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
 };
 
 export type VerifyOtpInput = {
@@ -216,17 +236,26 @@ export type CreateUserMutationVariables = Exact<{
 
 export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'CreateUserOutput', ok: boolean, error?: string | null } };
 
-export type LoginMutationVariables = Exact<{
-  loginInput: LoginInput;
+export type CreateNewPasswordMutationVariables = Exact<{
+  createNewPasswordInput: CreateNewPasswordInput;
 }>;
 
 
-export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'LoginOutput', ok: boolean, accessToken?: string | null, refreshToken?: string | null, expiresIn?: number | null, error?: string | null, user?: { __typename?: 'User', id: number, tel: string, name: string, role: RoleType, verified: boolean } | null } };
+export type CreateNewPasswordMutation = { __typename?: 'Mutation', createNewPassword: { __typename?: 'CreateNewPasswordOutput', ok: boolean, error?: string | null } };
 
-export type RefreshTokenMutationVariables = Exact<{ [key: string]: never; }>;
+export type VerifyForgotPasswordOtpMutationVariables = Exact<{
+  verifyForgotPasswordOtpInput: VerifyForgotPasswordOtpInput;
+}>;
 
 
-export type RefreshTokenMutation = { __typename?: 'Mutation', refreshToken: { __typename?: 'LoginOutput', ok: boolean, accessToken?: string | null, refreshToken?: string | null, error?: string | null } };
+export type VerifyForgotPasswordOtpMutation = { __typename?: 'Mutation', verifyForgotPasswordOtp: { __typename?: 'VerifyForgotPasswordOutput', ok: boolean, error?: string | null } };
+
+export type SendForgotPasswordOtpMutationVariables = Exact<{
+  sendForgotPasswordOtpInput: SendOtpInput;
+}>;
+
+
+export type SendForgotPasswordOtpMutation = { __typename?: 'Mutation', sendForgotPasswordOtp: { __typename?: 'SendOtpOutput', ok: boolean, error?: string | null } };
 
 export type VerifyOtpMutationVariables = Exact<{
   verifyOtpInput: VerifyOtpInput;
@@ -245,10 +274,25 @@ export type SendOtpMutationVariables = Exact<{ [key: string]: never; }>;
 
 export type SendOtpMutation = { __typename?: 'Mutation', sendOtp: { __typename?: 'SendOtpOutput', ok: boolean, error?: string | null } };
 
+export type LoginMutationVariables = Exact<{
+  loginInput: LoginInput;
+}>;
+
+
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'LoginOutput', ok: boolean, accessToken?: string | null, refreshToken?: string | null, expiresIn?: number | null, error?: string | null, user?: { __typename?: 'User', id: number, tel: string, name: string, role: RoleType, verified: boolean } | null } };
+
+export type RefreshTokenMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RefreshTokenMutation = { __typename?: 'Mutation', refreshToken: { __typename?: 'LoginOutput', ok: boolean, accessToken?: string | null, refreshToken?: string | null, error?: string | null } };
+
 
 export const CreateUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createUser"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"createUserInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateUserInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createUser"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"createUserInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"createUserInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<CreateUserMutation, CreateUserMutationVariables>;
-export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"loginInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"loginInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"loginInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}},{"kind":"Field","name":{"kind":"Name","value":"expiresIn"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"tel"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"verified"}}]}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
-export const RefreshTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<RefreshTokenMutation, RefreshTokenMutationVariables>;
+export const CreateNewPasswordDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createNewPassword"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"createNewPasswordInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateNewPasswordInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createNewPassword"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"createNewPasswordInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"createNewPasswordInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<CreateNewPasswordMutation, CreateNewPasswordMutationVariables>;
+export const VerifyForgotPasswordOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"verifyForgotPasswordOtp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"verifyForgotPasswordOtpInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"VerifyForgotPasswordOtpInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifyForgotPasswordOtp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"verifyForgotPasswordOtpInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"verifyForgotPasswordOtpInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<VerifyForgotPasswordOtpMutation, VerifyForgotPasswordOtpMutationVariables>;
+export const SendForgotPasswordOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"sendForgotPasswordOtp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sendForgotPasswordOtpInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SendOtpInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"sendForgotPasswordOtp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sendForgotPasswordOtpInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sendForgotPasswordOtpInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<SendForgotPasswordOtpMutation, SendForgotPasswordOtpMutationVariables>;
 export const VerifyOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"verifyOtp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"verifyOtpInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"VerifyOtpInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifyOtp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"verifyOtpInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"verifyOtpInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<VerifyOtpMutation, VerifyOtpMutationVariables>;
 export const ResendOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"resendOtp"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"resendOtp"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<ResendOtpMutation, ResendOtpMutationVariables>;
 export const SendOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"sendOtp"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"sendOtp"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<SendOtpMutation, SendOtpMutationVariables>;
+export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"loginInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"loginInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"loginInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}},{"kind":"Field","name":{"kind":"Name","value":"expiresIn"}},{"kind":"Field","name":{"kind":"Name","value":"user"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"tel"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"role"}},{"kind":"Field","name":{"kind":"Name","value":"verified"}}]}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
+export const RefreshTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<RefreshTokenMutation, RefreshTokenMutationVariables>;

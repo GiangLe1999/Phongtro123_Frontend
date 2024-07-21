@@ -17,9 +17,8 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { pageLinks, regexes } from "@/src/constants";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import CustomBreadcrumb from "@/src/components/custom-breadcrumb";
@@ -42,9 +41,7 @@ const formSchema = z.object({
 interface Props {}
 
 const Page: NextPage<Props> = () => {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { update } = useSession();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -95,7 +92,7 @@ const Page: NextPage<Props> = () => {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6 bg-white border rounded-md shadow-md p-[30px]"
           >
-            <h1 className="font-bold text-primary text-3xl mb-2">Đăng nhập</h1>
+            <h1 className="font-bold text-primary text-3xl">Đăng nhập</h1>
 
             <FormField
               control={form.control}
