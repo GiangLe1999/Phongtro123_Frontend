@@ -1,5 +1,6 @@
 "use client";
 
+import { ApolloWrapper } from "@/src/lib/apollo/wrapper";
 import { SessionProvider } from "next-auth/react";
 import { FC, ReactNode } from "react";
 
@@ -8,7 +9,11 @@ interface Props {
 }
 
 const Providers: FC<Props> = ({ children }): JSX.Element => {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <ApolloWrapper>{children}</ApolloWrapper>
+    </SessionProvider>
+  );
 };
 
 export default Providers;

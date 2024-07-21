@@ -1,4 +1,5 @@
 "use client";
+
 import { NextPage } from "next";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,13 +17,12 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { pageLinks, regexes } from "@/src/constants";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import CustomBreadcrumb from "@/src/components/custom-breadcrumb";
-import useGetUserForClient from "@/src/hooks/use-get-user-for-client";
 
 const formSchema = z.object({
   tel: z.string().regex(regexes.tel, {
@@ -44,7 +44,7 @@ interface Props {}
 const Page: NextPage<Props> = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const user = useGetUserForClient();
+  const { update } = useSession();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,7 +67,7 @@ const Page: NextPage<Props> = () => {
         toast.success("Đăng nhập thành công", {
           description: "Tiến hành chuyển hướng tới Trang chủ.",
         });
-        router.replace(pageLinks.home);
+        window.location.replace(pageLinks.home);
       } else {
         toast.error("Đăng nhập thất bại", {
           description: "Vui lòng kiểm tra lại thông tin đăng nhập.",
@@ -79,10 +79,6 @@ const Page: NextPage<Props> = () => {
       });
     }
     setLoading(false);
-  }
-
-  if (user) {
-    router.replace(pageLinks.home);
   }
 
   return (

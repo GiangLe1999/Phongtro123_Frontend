@@ -4,26 +4,17 @@ import { Button } from "@/components/ui/button";
 import CustomBreadcrumb from "@/src/components/custom-breadcrumb";
 import FillOtpForm from "@/src/components/xac-thuc-tai-khoan/fill-otp-form";
 import SendOtpForm from "@/src/components/xac-thuc-tai-khoan/send-otp-form";
-import { pageLinks, siteMetadata } from "@/src/constants";
+import { siteMetadata } from "@/src/constants";
 import useGetUserForClient from "@/src/hooks/use-get-user-for-client";
 import { NextPage } from "next";
-import { signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { useState } from "react";
 
 interface Props {}
 
 const Page: NextPage<Props> = () => {
   const user = useGetUserForClient();
-
-  const isVerified = user?.verified;
-  const router = useRouter();
-
   const [activeForm, setActiveForm] = useState("send-otp-form");
-
-  if (!user || isVerified) {
-    router.replace(pageLinks.home);
-  }
 
   return (
     <div className="bg-background min-h-screen">

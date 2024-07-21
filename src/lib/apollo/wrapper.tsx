@@ -21,9 +21,9 @@ function makeClient() {
     const modifiedHeader = {
       headers: {
         ...headers,
-        Authorization: session?.backendTokens?.accessToken
-          ? `Bearer ${session.backendTokens.accessToken}`
-          : "",
+        ...(session?.backendTokens?.accessToken && {
+          Authorization: `Bearer ${session.backendTokens.accessToken}`,
+        }),
         "apollo-require-preflight": true,
       },
     };

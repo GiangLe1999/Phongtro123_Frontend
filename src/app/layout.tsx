@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Quicksand } from "next/font/google";
 import "./globals.css";
-import { ApolloWrapper } from "../lib/apollo/wrapper";
-import Providers from "@/components/ui/providers";
+import Providers from "@/components/wrappers/providers";
 import CustomToaster from "../components/custom-toaster";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
@@ -21,10 +20,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={quicksand.className}>
         <Providers>
-          <ApolloWrapper>
-            {children}
-            <CustomToaster />
-          </ApolloWrapper>
+          {children}
+          <CustomToaster />
         </Providers>
       </body>
     </html>
