@@ -81,7 +81,7 @@ const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
     VerifyOtpMutationVariables
   >(VERIFY_OTP_MUTATION);
 
-  const [resendOtpMution, { loading: resendLoading }] = useMutation<
+  const [resendOtpMutaion, { loading: resendLoading }] = useMutation<
     ResendOtpMutation,
     ResendOtpMutationVariables
   >(RESEND_OTP_MUTATION);
@@ -128,7 +128,7 @@ const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
 
   async function resendOtp() {
     try {
-      const { data } = await resendOtpMution();
+      const { data } = await resendOtpMutaion();
 
       if (data?.resendOtp?.ok) {
         toast.success("Gửi lại xác thực thành công", {

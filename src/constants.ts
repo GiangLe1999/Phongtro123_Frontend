@@ -5,7 +5,6 @@ export const pageLinks = {
   verify: "/xac-thuc-tai-khoan",
   forgot_password: "/quen-mat-khau",
   bookmarks: "/tin-da-luu",
-  post: "/quan-ly/dang-tin-moi",
   room_postings: "/cho-thue-phong-tro",
   home_postings: "/nha-cho-thue",
   apartment_postings: "/cho-thue-can-ho",
@@ -13,7 +12,13 @@ export const pageLinks = {
   search_partners: "/tim-nguoi-o-ghep",
   news: "/blog",
   pricing: "/bang-gia-dich-vu",
+
   dashboard: "/quan-ly",
+  post: "/quan-ly/dang-tin-moi",
+  manage_posts: "/quan-ly/tin-dang",
+  payment: "quan-ly/nap-tien",
+  payment_history: "quan-ly/lich-su-nap-tien",
+  user_profile: "quan-ly/cap-nhat-thong-tin-ca-nhan",
 };
 
 export const regexes = {

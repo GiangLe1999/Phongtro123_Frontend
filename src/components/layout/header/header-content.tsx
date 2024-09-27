@@ -1,17 +1,16 @@
 "use client";
 
 import { FC } from "react";
-import SectionContainer from "../section-container";
+import SectionContainer from "../../section-container";
 import Image from "next/image";
 import logo from "@/public/logo-phongtro-123.svg";
 import Link from "next/link";
-import {
-  PlusCircleIcon,
-} from "lucide-react";
+import { PlusCircleIcon } from "lucide-react";
 import { pageLinks } from "@/src/constants";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { usePathname } from "next/navigation";
 import { cn } from "@/src/lib/utils";
+import DashboardOptions from "./dashboard-options";
 
 interface Props {
   topRightItems: {
@@ -37,21 +36,33 @@ const HeaderContent: FC<Props> = ({ topRightItems, navItems }): JSX.Element => {
         </Link>
 
         <div className="flex items-center gap-[5px] text-sm font-semibold h-full">
-          {topRightItems?.map((item) => (
-            <Link
-              key={item.title}
-              href={item.link}
-              className={cn(
-                pathname === item.link
-                  ? "text-secondary underline font-bold"
-                  : "hover:underline hover:text-secondary",
-                "flex items-center gap-1 px-3 h-full transition"
-              )}
-            >
-              {item.icon}
-              <span>{item.title}</span>
-            </Link>
-          ))}
+          {topRightItems?.map((item) => {
+            if (!item.link) {
+              return (
+                <DashboardOptions
+                  key="Dashboard options"
+                  title={item.title}
+                  icon={item.icon}
+                />
+              );
+            }
+
+            return (
+              <Link
+                key={item.title}
+                href={item.link}
+                className={cn(
+                  pathname === item.link
+                    ? "text-secondary underline font-bold"
+                    : "hover:underline hover:text-secondary",
+                  "flex items-center gap-1 px-3 h-full transition"
+                )}
+              >
+                {item.icon}
+                <span>{item.title}</span>
+              </Link>
+            );
+          })}
 
           <Button
             variant="secondary"

@@ -7,9 +7,9 @@ import {
   UserRoundPlusIcon,
 } from "lucide-react";
 import { pageLinks } from "@/src/constants";
-import HeaderContent from "./header-content";
 import authOptions from "@/src/lib/configs/auth/authOptions";
 import { getServerSession } from "next-auth";
+import HeaderContent from "./header-content";
 
 const defaultTopRightItems = [
   {
@@ -38,7 +38,7 @@ const loggedInTopRightItems = [
   {
     title: "Quản lý tài khoản",
     icon: <LayoutDashboardIcon size={16} />,
-    link: pageLinks.dashboard,
+    link: "",
   },
 ];
 
