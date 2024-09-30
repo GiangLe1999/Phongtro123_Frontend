@@ -24,7 +24,7 @@ import {
 } from "@/src/__generated__/graphql";
 import { toast } from "sonner";
 
-const SEND_OTP_MUTATION = gql`
+export const SEND_OTP_MUTATION = gql`
   mutation sendOtp {
     sendOtp {
       ok

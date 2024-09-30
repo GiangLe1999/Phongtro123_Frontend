@@ -28,25 +28,17 @@ import {
   VerifyOtpMutation,
   VerifyOtpInput,
   VerifyOtpMutationVariables,
-  ResendOtpMutation,
-  ResendOtpMutationVariables,
+  SendOtpMutation,
+  SendOtpMutationVariables,
 } from "@/src/__generated__/graphql";
 import { useRouter } from "next/navigation";
 import { pageLinks } from "@/src/constants";
 import { useSession } from "next-auth/react";
+import { SEND_OTP_MUTATION } from "./send-otp-form";
 
 const VERIFY_OTP_MUTATION = gql`
   mutation verifyOtp($verifyOtpInput: VerifyOtpInput!) {
     verifyOtp(verifyOtpInput: $verifyOtpInput) {
-      ok
-      error
-    }
-  }
-`;
-
-const RESEND_OTP_MUTATION = gql`
-  mutation resendOtp {
-    resendOtp {
       ok
       error
     }
@@ -64,8 +56,7 @@ interface Props {
 }
 
 const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
-  const [count, setCount] = useState(60);
-  const canResendOtp = count === 0;
+  const [count, setCount] = useState(900);
   const router = useRouter();
   const { data: session, update: updateSession } = useSession();
 
@@ -81,17 +72,13 @@ const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
     VerifyOtpMutationVariables
   >(VERIFY_OTP_MUTATION);
 
-  const [resendOtpMutaion, { loading: resendLoading }] = useMutation<
-    ResendOtpMutation,
-    ResendOtpMutationVariables
-  >(RESEND_OTP_MUTATION);
+  const [sendOtpMutation, { loading: resendOtpLoading }] = useMutation<
+    SendOtpMutation,
+    SendOtpMutationVariables
+  >(SEND_OTP_MUTATION);
 
   async function onSubmit(formValues: z.infer<typeof FormSchema>) {
     try {
-      if (canResendOtp) {
-        await resendOtp();
-      }
-
       const { data } = await verifyOtpMution({
         variables: { verifyOtpInput: formValues as VerifyOtpInput },
       });
@@ -128,15 +115,15 @@ const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
 
   async function resendOtp() {
     try {
-      const { data } = await resendOtpMutaion();
+      const { data } = await sendOtpMutation();
 
-      if (data?.resendOtp?.ok) {
+      if (data?.sendOtp?.ok) {
         toast.success("Gửi lại xác thực thành công", {
           description: `Vui lòng kiểm tra tin nhắn tới SĐT ${user?.tel} và nhập vào OTP.`,
         });
-        setCount(60);
+        setCount(900);
       } else {
-        toast.error(data?.resendOtp?.error, {
+        toast.error(data?.sendOtp?.error, {
           description: "Vui lòng kiểm tra lại SĐT.",
         });
       }
@@ -157,7 +144,7 @@ const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="mt-3 space-y-6 mb-6"
+          className="mt-3 space-y-6 mb-2"
         >
           <FormField
             control={form.control}
@@ -187,37 +174,39 @@ const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
             )}
           />
 
-          {canResendOtp ? (
-            <Button
-              className="w-full font-bold mt-6 hover:underline gap-1"
-              type="button"
-              onClick={resendOtp}
-            >
-              {resendLoading ? (
-                <>
-                  <Loader2 className="animate-spin" /> Đang xử lý...
-                </>
-              ) : (
-                "Gửi lại mã xác thực"
-              )}
-            </Button>
-          ) : (
-            <Button
-              className="w-full font-bold mt-6 hover:underline gap-1"
-              type="submit"
-            >
-              {loading ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <>
-                  Xác thực tài khoản
-                  <CountdownTimer count={count} setCount={setCount} />
-                </>
-              )}
-            </Button>
-          )}
+          <Button
+            className="w-full font-bold mt-6 hover:underline gap-1"
+            type="submit"
+          >
+            {loading ? (
+              <Loader2 className="animate-spin" />
+            ) : (
+              <>
+                Xác thực tài khoản
+                <CountdownTimer count={count} setCount={setCount} />
+              </>
+            )}
+          </Button>
         </form>
       </Form>
+
+      <div className="text-center mb-6">
+        {resendOtpLoading ? (
+          <div className="flex items-center">
+            <Loader2 className="animate-spin" />
+            Đang gửi lại OTP...
+          </div>
+        ) : (
+          <Button
+            onClick={resendOtp}
+            type="button"
+            className="underline font-bold"
+            variant="link"
+          >
+            Gửi lại OTP
+          </Button>
+        )}
+      </div>
     </>
   );
 };

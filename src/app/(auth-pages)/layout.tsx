@@ -1,3 +1,4 @@
+import Header from "@/src/components/layout/header";
 import { pageLinks } from "@/src/constants";
 import authOptions from "@/src/lib/configs/auth/authOptions";
 import { getServerSession } from "next-auth";
@@ -8,22 +9,19 @@ interface Props {
   children: ReactNode;
 }
 
-const PrivatePagesLayout: FC<Props> = async ({
+const AuthPagesLayout: FC<Props> = async ({
   children,
 }): Promise<JSX.Element> => {
   const session = await getServerSession(authOptions);
 
-  console.log(session);
+  if (session) redirect(pageLinks.home);
 
-  if (session && !session.user.verified) {
-    redirect(pageLinks.verify);
-  }
-
-  if (!session) {
-    redirect(pageLinks.login);
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      <Header />
+      {children}
+    </>
+  );
 };
 
-export default PrivatePagesLayout;
+export default AuthPagesLayout;
