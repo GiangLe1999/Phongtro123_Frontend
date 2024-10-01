@@ -12,6 +12,7 @@ export const pageLinks = {
   search_partners: "/tim-nguoi-o-ghep",
   news: "/blog",
   pricing: "/bang-gia-dich-vu",
+  contact: "/lien-he",
 
   dashboard: "/quan-ly",
   post: "/quan-ly/dang-tin-moi",
@@ -19,6 +20,7 @@ export const pageLinks = {
   payment: "quan-ly/nap-tien",
   payment_history: "quan-ly/lich-su-nap-tien",
   user_profile: "quan-ly/cap-nhat-thong-tin-ca-nhan",
+  checkout_history: "quan-ly/lich-su-thanh-toan",
 };
 
 export const regexes = {

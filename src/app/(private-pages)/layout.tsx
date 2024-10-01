@@ -1,3 +1,5 @@
+import PrivateHeader from "@/src/components/layout/private-header";
+import PrivateSidebar from "@/src/components/layout/private-sidebar";
 import { pageLinks } from "@/src/constants";
 import authOptions from "@/src/lib/configs/auth/authOptions";
 import { getServerSession } from "next-auth";
@@ -13,8 +15,6 @@ const PrivatePagesLayout: FC<Props> = async ({
 }): Promise<JSX.Element> => {
   const session = await getServerSession(authOptions);
 
-  console.log(session);
-
   if (session && !session.user.verified) {
     redirect(pageLinks.verify);
   }
@@ -23,7 +23,15 @@ const PrivatePagesLayout: FC<Props> = async ({
     redirect(pageLinks.login);
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <PrivateHeader />
+      <div className="flex mt-[45px]">
+        <PrivateSidebar />
+        {children}
+      </div>
+    </>
+  );
 };
 
 export default PrivatePagesLayout;

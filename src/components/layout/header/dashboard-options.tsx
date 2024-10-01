@@ -33,7 +33,7 @@ const DashboardOptions: FC<Props> = ({ title, icon }): JSX.Element => {
         <DropdownMenuItem className="border-b hover:!bg-gray-50 py-3">
           <Link
             href={pageLinks.post}
-            className="flex items-center hover:text-primary font-semibold"
+            className="flex items-center hover:text-primary font-semibold w-full"
           >
             <Image
               src="/icons/dashboard-add-post.svg"
@@ -49,7 +49,7 @@ const DashboardOptions: FC<Props> = ({ title, icon }): JSX.Element => {
         <DropdownMenuItem className="border-b hover:!bg-gray-50 py-3">
           <Link
             href={pageLinks.manage_posts}
-            className="flex items-center hover:text-primary font-semibold"
+            className="flex items-center hover:text-primary font-semibold w-full"
           >
             <Image
               src="/icons/dashboard-manage-post.svg"
@@ -65,7 +65,7 @@ const DashboardOptions: FC<Props> = ({ title, icon }): JSX.Element => {
         <DropdownMenuItem className="border-b hover:!bg-gray-50 py-3">
           <Link
             href={pageLinks.payment}
-            className="flex items-center hover:text-primary font-semibold"
+            className="flex items-center hover:text-primary font-semibold w-full"
           >
             <Image
               src="/icons/dashboard-payment.svg"
@@ -81,7 +81,7 @@ const DashboardOptions: FC<Props> = ({ title, icon }): JSX.Element => {
         <DropdownMenuItem className="border-b hover:!bg-gray-50 py-3">
           <Link
             href={pageLinks.payment_history}
-            className="flex items-center hover:text-primary font-semibold"
+            className="flex items-center hover:text-primary font-semibold w-full"
           >
             <Image
               src="/icons/dashboard-payment-history.svg"
@@ -97,7 +97,7 @@ const DashboardOptions: FC<Props> = ({ title, icon }): JSX.Element => {
         <DropdownMenuItem className="border-b hover:!bg-gray-50 py-3">
           <Link
             href={pageLinks.user_profile}
-            className="flex items-center hover:text-primary font-semibold"
+            className="flex items-center hover:text-primary font-semibold w-full"
           >
             <Image
               src="/icons/dashboard-user.svg"
@@ -113,7 +113,7 @@ const DashboardOptions: FC<Props> = ({ title, icon }): JSX.Element => {
         <DropdownMenuItem className="border-b hover:!bg-gray-50 py-3">
           <Link
             href={pageLinks.bookmarks}
-            className="flex items-center hover:text-primary font-semibold"
+            className="flex items-center hover:text-primary font-semibold w-full"
           >
             <Image
               src="/icons/dashboard-post-saved.svg"
@@ -129,7 +129,7 @@ const DashboardOptions: FC<Props> = ({ title, icon }): JSX.Element => {
         <DropdownMenuItem className="hover:!bg-gray-50 py-3">
           <button
             onClick={() => signOut()}
-            className="flex items-center hover:text-primary font-semibold"
+            className="flex items-center hover:text-primary font-semibold w-full"
           >
             <Image
               src="/icons/dashboard-logout.svg"

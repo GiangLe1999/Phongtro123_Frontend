@@ -99,6 +99,7 @@ const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
 
         await updateSession(newSession);
 
+        window.location.reload();
         router.replace(pageLinks.home);
       } else {
         toast.error(data?.verifyOtp?.error, {
@@ -192,8 +193,8 @@ const FillOtpForm: FC<Props> = ({ user }): JSX.Element => {
 
       <div className="text-center mb-6">
         {resendOtpLoading ? (
-          <div className="flex items-center">
-            <Loader2 className="animate-spin" />
+          <div className="flex items-center w-fit mx-auto text-sm h-10">
+            <Loader2 className="animate-spin w-3 h-3 mr-2" />
             Đang gửi lại OTP...
           </div>
         ) : (
