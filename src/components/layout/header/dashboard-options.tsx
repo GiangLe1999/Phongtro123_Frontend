@@ -128,7 +128,9 @@ const DashboardOptions: FC<Props> = ({ title, icon }): JSX.Element => {
 
         <DropdownMenuItem className="hover:!bg-gray-50 py-3">
           <button
-            onClick={() => signOut()}
+            onClick={() =>
+              signOut({ callbackUrl: pageLinks.home, redirect: true })
+            }
             className="flex items-center hover:text-primary font-semibold w-full"
           >
             <Image

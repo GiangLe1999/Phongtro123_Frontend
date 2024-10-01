@@ -7,13 +7,14 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { FC } from "react";
+import { pageLinks } from "../constants";
 
 interface Props {
   pages: { name: string; link: string }[];
 }
 
 const CustomBreadcrumb: FC<Props> = ({ pages }): JSX.Element => {
-  const allPages = [{ name: "Trang chủ", link: "/" }, ...pages];
+  const allPages = [{ name: "Trang chủ", link: pageLinks.home }, ...pages];
 
   return (
     <Breadcrumb>

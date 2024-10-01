@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import CustomBreadcrumb from "@/src/components/custom-breadcrumb";
 import FillOtpForm from "@/src/components/xac-thuc-tai-khoan/fill-otp-form";
 import SendOtpForm from "@/src/components/xac-thuc-tai-khoan/send-otp-form";
-import { siteMetadata } from "@/src/constants";
+import { pageLinks, siteMetadata } from "@/src/constants";
 import useGetUserForClient from "@/src/hooks/use-get-user-for-client";
 import { NextPage } from "next";
 import { signOut } from "next-auth/react";
@@ -48,7 +48,9 @@ const Page: NextPage<Props> = () => {
 
           <Button
             type="button"
-            onClick={() => signOut()}
+            onClick={() =>
+              signOut({ callbackUrl: pageLinks.home, redirect: true })
+            }
             className="w-full font-bold mt-6 hover:underline hover:opacity-90 transition-opacity"
             variant="secondary"
           >
