@@ -99,9 +99,7 @@ const Page: NextPage<Props> = () => {
               name="tel"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-bold text-gray-700">
-                    Số điện thoại
-                  </FormLabel>
+                  <FormLabel>Số điện thoại</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Số điện thoại"
@@ -112,7 +110,7 @@ const Page: NextPage<Props> = () => {
                   <FormDescription className="text-xs">
                     Số điện thoại có độ dài tự 10~11 chữ số.
                   </FormDescription>
-                  <FormMessage className="text-xs text-red-600" />
+                  <FormMessage />
                 </FormItem>
               )}
             />
@@ -122,16 +120,14 @@ const Page: NextPage<Props> = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-bold text-gray-700">
-                    Mật khẩu
-                  </FormLabel>
+                  <FormLabel>Mật khẩu</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="Mật khẩu" {...field} />
                   </FormControl>
                   <FormDescription className="text-xs">
                     Mật khẩu có độ dài từ 2~50 ký tự, phải chứa cả chữ và số.
                   </FormDescription>
-                  <FormMessage className="text-xs text-red-600" />
+                  <FormMessage />
                 </FormItem>
               )}
             />

@@ -33,7 +33,7 @@ const dashboardOptions = [
 
 const PrivateHeader: FC<Props> = (props): JSX.Element => {
   return (
-    <nav className="bg-[#055699] h-[45px] shadow-[0px_2px_5px_0_rgba(0,0,0,0.2)] fixed z-[1030] top-0 inset-x-0 text-white">
+    <nav className="bg-primary h-[45px] shadow-[0px_2px_5px_0_rgba(0,0,0,0.2)] fixed z-[1030] top-0 inset-x-0 text-white">
       <div className="flex items-center gap-1 px-5">
         <div className="w-[250px] text-[17px] font-bold">
           <Link className="w-full py-[9px] block" href={pageLinks.home}>

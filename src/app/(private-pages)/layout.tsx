@@ -28,7 +28,7 @@ const PrivatePagesLayout: FC<Props> = async ({
       <PrivateHeader />
       <div className="flex mt-[45px]">
         <PrivateSidebar />
-        {children}
+        <div className="ml-[250px] p-5 flex-1">{children}</div>
       </div>
     </>
   );
