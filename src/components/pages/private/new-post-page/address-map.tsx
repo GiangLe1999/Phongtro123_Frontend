@@ -44,11 +44,13 @@ const AdddressMap: FC<Props> = ({ location }): JSX.Element => {
   const updateMapByLocation = async (locationString: string) => {
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
       locationString
-    )}.json?access_token=${mapboxgl.accessToken}&limit=1&country=vn`;
+    )}.json?access_token=${mapboxgl.accessToken}&limit=1`;
 
     try {
       const response = await fetch(url);
       const data = await response.json();
+
+      console.log(data);
 
       if (data.features && data.features.length > 0) {
         const coordinates = data.features[0].geometry.coordinates;
@@ -90,7 +92,11 @@ const AdddressMap: FC<Props> = ({ location }): JSX.Element => {
   }, [location]);
 
   return (
-    <div ref={mapContainerRef} style={{ width: "100%", height: "100%" }} />
+    <div
+      className="rounded-sm shadow-sm"
+      ref={mapContainerRef}
+      style={{ width: "100%", height: "100%" }}
+    />
   );
 };
 

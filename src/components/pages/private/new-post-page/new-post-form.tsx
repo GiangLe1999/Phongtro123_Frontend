@@ -76,6 +76,10 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
   const [wards, setWards] = useState<{ id: string; name: string }[]>([]);
   const [getWardsLoading, setGetWardsLoading] = useState(false);
 
+  // Streets States
+  const [streets, setStreets] = useState<string[]>([]);
+  const [getStreetsLoading, setGetStreetsLoading] = useState(false);
+
   // Form States
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -102,6 +106,7 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
 
   const choseStreet = form.watch("street");
   const choseAddressNumber = form.watch("address_number");
+
   const fullAddress = `${
     choseAddressNumber ? `Số ${choseAddressNumber}, ` : ""
   } ${choseStreet ? `${choseStreet}, ` : ""}${
@@ -161,12 +166,94 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
     getWards();
   }, [choseDistrict]);
 
+  // Get Streets & Set Streets
+  const getStreets = async () => {
+    setGetStreetsLoading(true);
+    const getBoudingBoxUrl = `${
+      process.env.NEXT_PUBLIC_GET_BOUNDING_BOX_BASE_API
+    }${initialChoseWard?.name.replace(
+      / /g,
+      "+"
+    )},${initialChoseProvince?.name.replace(
+      / /g,
+      "+"
+    )}&class=boundary&type=administrative`;
+
+    try {
+      const boundingBoxRes = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/boundary-box`,
+        {
+          method: "POST",
+          body: JSON.stringify(getBoudingBoxUrl),
+        }
+      );
+
+      if (!boundingBoxRes.ok) {
+        console.log("Lấy bouding box của phường/xã không thành công.");
+      }
+
+      const boundingBoxData = await boundingBoxRes.json();
+
+      if (boundingBoxData.status === 404) {
+        console.log("Không tìm thấy bounding box");
+        setGetStreetsLoading(false);
+        setStreets([]);
+      } else {
+        try {
+          const overpassUrl = process.env
+            .NEXT_PUBLIC_GET_STREET_LIST_BASE_API as string;
+          const query = `
+        [out:json];
+        (
+          way["highway"](${boundingBoxData[0]},${boundingBoxData[2]},${boundingBoxData[1]},${boundingBoxData[3]});
+        );
+        out body;
+        >;
+        out skel qt;`;
+
+          // Fetch data from Overpass API
+          const response = await fetch(overpassUrl, {
+            method: "POST",
+            body: query,
+          });
+
+          const json = await response.json();
+
+          if (!response.ok) {
+            console.error("Error fetching data:", json.error);
+          }
+
+          const filteredStreets = [
+            ...new Set(
+              json.elements
+                .filter((e: any) => e.tags?.name !== undefined)
+                .map((e: any) => e.tags.name.trim())
+            ),
+          ];
+
+          setStreets(filteredStreets as string[]);
+          console.log(filteredStreets);
+          setGetStreetsLoading(false);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+    } catch (error) {
+      console.log("Lấy bounding box của phường/xã không thành công.");
+      setStreets([]);
+      setGetWardsLoading(false);
+    }
+  };
+  useEffect(() => {
+    getStreets();
+  }, [choseWard]);
+
   return (
-    <div className="flex">
+    <div className="flex gap-10">
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 w-[70%]"
+          className="space-y-6 w-[60%]"
         >
           <div className="grid grid-cols-3 gap-4">
             <FormField
@@ -275,13 +362,28 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Đường/Phố</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nhập Đường/Phố" {...field} />
-                  </FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={getWardsLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="--Chọn Đường/Phố--" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {streets.map((street: string) => (
+                        <SelectItem value={street} key={street}>
+                          {street}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {errors.ward ? (
                     <FormMessage />
                   ) : (
-                    <FormDescription>Vui lòng nhập Đường/Phố</FormDescription>
+                    <FormDescription>Vui lòng chọn Đường/Phố</FormDescription>
                   )}
                 </FormItem>
               )}
@@ -321,16 +423,39 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
         </form>
       </Form>
 
-      <div className="flex-1 aspect-square">
-        <AdddressMap
-          location={{
-            address_number: choseAddressNumber,
-            street: choseStreet,
-            province: initialChoseProvince?.name || "",
-            district: initialChoseDistrict?.name || "",
-            ward: initialChoseWard?.name || "",
-          }}
-        />
+      <div className="flex-1 ">
+        <div className="w-full aspect-square">
+          {/* <AdddressMap
+            location={{
+              address_number: choseAddressNumber,
+              street: choseStreet,
+              province: initialChoseProvince?.name || "",
+              district: initialChoseDistrict?.name || "",
+              ward: initialChoseWard?.name || "",
+            }}
+          /> */}
+        </div>
+
+        <div className="bg-[#FFF9E6] rounded-sm p-4 mt-6 mb-5 shadow-md text-sm">
+          <h2 className="font-bold text-xl mb-2">Lưu ý khi đăng tin:</h2>
+          <ul className="text-sm list-disc space-y-2 list-inside marker:text-muted-foreground">
+            <li>Nội dung phải viết bằng tiếng Việt có dấu.</li>
+            <li>
+              Tiêu đề tin không dài quá 100 kí tự Các bạn nên điền đầy đủ thông
+              tin vào các mục để tin đăng có hiệu quả hơn.
+            </li>
+            <li>
+              Để tăng độ tin cậy và tin rao được nhiều người quan tâm hơn, hãy
+              sửa vị trí tin rao của bạn trên bản đồ bằng cách kéo icon tới đúng
+              vị trí của tin rao.
+            </li>
+            <li>
+              Tin đăng có hình ảnh rõ ràng sẽ được xem và gọi gấp nhiều lần so
+              với tin rao không có ảnh.
+            </li>
+            <li>Hãy đăng ảnh để được giao dịch nhanh chóng!</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
