@@ -1,13 +1,22 @@
+"use client";
+
 import PrivateBreadcrumb from "@/src/components/layout/private-breadcrumb";
 import { pageLinks } from "@/src/constants";
-import { FC } from "react";
+import { FC, useState } from "react";
 import NewPostForm from "./new-post-form";
+import NewPostCheckout from "./new-post-checkout";
+import { CreatePostingInput } from "@/src/__generated__/graphql";
 
 interface Props {
   provinces: { id: string; name: string }[];
 }
 
 const NewPostPageContent: FC<Props> = ({ provinces }): JSX.Element => {
+  const [showedContent, setShowedContent] = useState<"form" | "checkout">(
+    "checkout"
+  );
+  const [formValue, setFormValue] = useState<CreatePostingInput>();
+
   return (
     <div>
       <PrivateBreadcrumb
@@ -25,7 +34,15 @@ const NewPostPageContent: FC<Props> = ({ provinces }): JSX.Element => {
         mới. Tin đăng trùng nhau sẽ không được duyệt.
       </div>
 
-      <NewPostForm provinces={provinces} />
+      {showedContent === "form" ? (
+        <NewPostForm
+          provinces={provinces}
+          setFormValue={setFormValue}
+          setShowedContent={setShowedContent}
+        />
+      ) : (
+        <NewPostCheckout formValue={formValue} />
+      )}
     </div>
   );
 };

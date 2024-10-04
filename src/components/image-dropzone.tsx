@@ -6,7 +6,7 @@ import { UseFormSetValue } from "react-hook-form";
 
 interface Props {
   setFormValue: UseFormSetValue<any>;
-  error: any;
+  error?: any;
 }
 
 const ImageDropzone: FC<Props> = ({ setFormValue, error }) => {

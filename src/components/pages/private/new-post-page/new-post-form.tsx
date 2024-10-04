@@ -1,6 +1,15 @@
 "use client";
 
-import { FC, use, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  Dispatch,
+  FC,
+  SetStateAction,
+  use,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import {
   Select,
@@ -12,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
   Form,
@@ -29,9 +38,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "next-auth/react";
-import { TentnantType } from "@/src/__generated__/graphql";
+import { CreatePostingInput, TentnantType } from "@/src/__generated__/graphql";
 import ImageDropzone from "@/src/components/image-dropzone";
 import VideoDropzone from "@/src/components/video-dropzone";
+import { ArrowRightIcon } from "lucide-react";
+import Attention from "./attention";
 
 const FormSchema = z.object({
   address_number: z
@@ -100,33 +111,31 @@ const FormSchema = z.object({
     })
     .min(1, "Đối tượng cho thuê không được để trống."),
 
-  name: z
-    .string({
-      required_error: "Tên liên hệ là bắt buộc.",
-    })
-    .min(1, "Tên liên hệ không được để trống."),
+  name: z.string().min(1),
 
-  images: z
-    .array(z.instanceof(File), {
-      required_error: "Hình ảnh là bắt buộc.",
-    })
-    .min(1, "Bạn phải tải lên ít nhất một hình ảnh."),
+  tel: z.string().min(1),
+
+  images: z.array(z.instanceof(File)).optional(),
 
   videos: z
-    .array(z.instanceof(File), {
-      required_error: "Video là bắt buộc.",
-    })
-    .min(1, "Bạn phải tải lên ít nhất một video.")
+    .array(z.instanceof(File))
     .refine((files) => files.every((file) => file.type.startsWith("video/")), {
       message: "Chỉ các tệp video được cho phép.",
-    }),
+    })
+    .optional(),
 });
 
 interface Props {
   provinces: { id: string; name: string }[];
+  setFormValue: Dispatch<SetStateAction<CreatePostingInput | undefined>>;
+  setShowedContent: Dispatch<SetStateAction<"form" | "checkout">>;
 }
 
-const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
+const NewPostForm: FC<Props> = ({
+  provinces,
+  setFormValue,
+  setShowedContent,
+}): JSX.Element => {
   // Get Session
   const { data: session } = useSession();
 
@@ -143,17 +152,13 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
   // Streets States
   const [streets, setStreets] = useState<string[]>([]);
   const [getStreetsLoading, setGetStreetsLoading] = useState(false);
+  const [streetInputType, setStreetInputType] = useState<"text" | "select">(
+    "text"
+  );
 
   // Form States
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      address_number: "",
-      province: "",
-      district: "",
-      ward: "",
-      street: "",
-    },
     mode: "onChange",
   });
 
@@ -178,9 +183,6 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
   }${choseDistrict ? `${initialChoseDistrict?.name}, ` : ""}${
     choseProvince ? `${initialChoseProvince?.name}` : ""
   }`;
-
-  // Submit Form
-  function onSubmit(data: z.infer<typeof FormSchema>) {}
 
   // Get Districts & Set Districts
   const getDistricts = async () => {
@@ -261,6 +263,7 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
 
       if (boundingBoxData.status === 404) {
         console.log("Không tìm thấy bounding box");
+        setStreetInputType("text");
         setGetStreetsLoading(false);
         setStreets([]);
       } else {
@@ -285,6 +288,7 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
           const json = await response.json();
 
           if (!response.ok) {
+            setStreetInputType("text");
             console.error("Error fetching data:", json.error);
           }
 
@@ -296,22 +300,73 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
             ),
           ];
 
-          setStreets(filteredStreets as string[]);
-          console.log(filteredStreets);
+          if (filteredStreets.length > 0) {
+            setStreetInputType("select");
+            setStreets(filteredStreets as string[]);
+          }
           setGetStreetsLoading(false);
         } catch (error) {
+          setStreetInputType("text");
           console.error("Error fetching data:", error);
         }
       }
     } catch (error) {
       console.log("Lấy bounding box của phường/xã không thành công.");
-      setStreets([]);
+      setStreetInputType("text");
       setGetWardsLoading(false);
     }
   };
   useEffect(() => {
     getStreets();
   }, [choseWard]);
+
+  // Formatted Currency
+  const [formattedValue, setFormattedValue] = useState<string>("");
+
+  const formatCurrency = (value: string) => {
+    const numericValue = Number(value.replace(/,/g, ""));
+    if (isNaN(numericValue)) {
+      return "";
+    }
+    return numericValue.toLocaleString("en-US", {
+      style: "decimal",
+      maximumFractionDigits: 0,
+    });
+  };
+
+  const priceHandleChange = (
+    event: ChangeEvent<HTMLInputElement>,
+    onChange: (value: number) => void
+  ) => {
+    const { value } = event.target;
+    const numericValue = Number(value);
+    onChange(Number(numericValue));
+    setFormattedValue(formatCurrency(value));
+  };
+
+  // Set Default Values
+  useEffect(() => {
+    if (session && session?.user) {
+      form.setValue("name", session.user.name);
+      form.setValue("tel", session.user.tel);
+    }
+  }, [session]);
+
+  // Submit Form
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    setFormValue({
+      address: fullAddress,
+      title: data.title,
+      main_content: data.main_content,
+      price: Number(data.price),
+      area: Number(data.area),
+      tenant_type: data.tenant_type as any,
+      province_id: Number(data.province),
+      district_id: Number(data.district),
+      category_id: Number(data.category),
+    });
+    setShowedContent("checkout");
+  }
 
   return (
     <div>
@@ -429,38 +484,68 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
               />
 
               {/* Street */}
-              <FormField
-                control={form.control}
-                name="street"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Đường/Phố</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={getStreetsLoading}
-                    >
+
+              {streetInputType === "text" ? (
+                // Text input
+                <FormField
+                  control={form.control}
+                  name="street"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Đường/Phố</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn Đường/Phố" />
-                        </SelectTrigger>
+                        <Input
+                          placeholder="Nhập Đường/Phố"
+                          disabled={getStreetsLoading}
+                          {...field}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {streets.map((street: string) => (
-                          <SelectItem value={street} key={street}>
-                            {street}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.ward ? (
-                      <FormMessage />
-                    ) : (
-                      <FormDescription>Vui lòng chọn Đường/Phố</FormDescription>
-                    )}
-                  </FormItem>
-                )}
-              />
+                      {errors.street ? (
+                        <FormMessage />
+                      ) : (
+                        <FormDescription>
+                          Vui lòng nhập Đường/Phố
+                        </FormDescription>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <FormField
+                  control={form.control}
+                  name="street"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Đường/Phố</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={getStreetsLoading}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn Đường/Phố" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {streets.map((street: string) => (
+                            <SelectItem value={street} key={street}>
+                              {street}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.ward ? (
+                        <FormMessage />
+                      ) : (
+                        <FormDescription>
+                          Vui lòng chọn Đường/Phố
+                        </FormDescription>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {/* Address Number */}
               <FormField
@@ -470,7 +555,11 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
                   <FormItem>
                     <FormLabel>Số nhà</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nhập số nhà" {...field} />
+                      <Input
+                        placeholder="Nhập số nhà"
+                        {...field}
+                        type="number"
+                      />
                     </FormControl>
                     {errors.address_number ? (
                       <FormMessage />
@@ -606,7 +695,6 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
                         placeholder="Cập nhật tên để thay đổi"
                         {...field}
                         disabled
-                        value={session?.user?.name}
                       />
                     </FormControl>
                     <FormDescription>Cập nhật tên để thay đổi</FormDescription>
@@ -617,7 +705,7 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
               {/* Phone number */}
               <FormField
                 control={form.control}
-                name="name"
+                name="tel"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Số điện thoại</FormLabel>
@@ -626,7 +714,6 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
                         placeholder="Cập nhật SĐT để thay đổi"
                         {...field}
                         disabled
-                        value={session?.user?.tel}
                       />
                     </FormControl>
                     <FormDescription>Cập nhật SĐT để thay đổi</FormDescription>
@@ -679,8 +766,11 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
                       <FormControl>
                         <Input
                           placeholder="Nhập số tiền phải trả trong 1 tháng"
-                          type="number"
-                          {...field}
+                          type="text"
+                          value={formattedValue}
+                          onChange={(e) => priceHandleChange(e, field.onChange)}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
                         />
                       </FormControl>
                       <FormDescription>
@@ -719,15 +809,17 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
             <p className="!mt-1 text-sm">
               Cập nhật hình ảnh rõ ràng sẽ cho thuê nhanh hơn
             </p>
-            <ImageDropzone setFormValue={form.setValue} error={errors.images} />
+            <ImageDropzone setFormValue={form.setValue} />
 
             <h2 className="font-bold text-2xl">Video</h2>
             <p className="!mt-1 text-sm">
               Cập nhật video để người thuê có góc nhìn tổng quan
             </p>
-            <VideoDropzone setFormValue={form.setValue} error={errors.videos} />
+            <VideoDropzone setFormValue={form.setValue} />
 
-            <Button type="submit">Submit</Button>
+            <Button type="submit" className="w-full">
+              Tiếp Tục <ArrowRightIcon className="ml-1 h-4 w-4" />
+            </Button>
           </form>
         </Form>
 
@@ -744,26 +836,7 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
             /> */}
           </div>
 
-          <div className="bg-[#FFF9E6] rounded-sm p-4 mt-6 mb-5 shadow-md text-sm">
-            <h2 className="font-bold text-xl mb-2">Lưu ý khi đăng tin:</h2>
-            <ul className="text-sm list-disc space-y-2 list-inside marker:text-muted-foreground">
-              <li>Nội dung phải viết bằng tiếng Việt có dấu.</li>
-              <li>
-                Tiêu đề tin không dài quá 100 kí tự Các bạn nên điền đầy đủ
-                thông tin vào các mục để tin đăng có hiệu quả hơn.
-              </li>
-              <li>
-                Để tăng độ tin cậy và tin rao được nhiều người quan tâm hơn, hãy
-                sửa vị trí tin rao của bạn trên bản đồ bằng cách kéo icon tới
-                đúng vị trí của tin rao.
-              </li>
-              <li>
-                Tin đăng có hình ảnh rõ ràng sẽ được xem và gọi gấp nhiều lần so
-                với tin rao không có ảnh.
-              </li>
-              <li>Hãy đăng ảnh để được giao dịch nhanh chóng!</li>
-            </ul>
-          </div>
+          <Attention />
         </div>
       </div>
     </div>

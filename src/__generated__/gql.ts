@@ -19,7 +19,7 @@ const documents = {
     "\n  mutation sendForgotPasswordOtp($sendForgotPasswordOtpInput: SendOtpInput!) {\n    sendForgotPasswordOtp(\n      sendForgotPasswordOtpInput: $sendForgotPasswordOtpInput\n    ) {\n      ok\n      error\n    }\n  }\n": types.SendForgotPasswordOtpDocument,
     "\n  mutation verifyOtp($verifyOtpInput: VerifyOtpInput!) {\n    verifyOtp(verifyOtpInput: $verifyOtpInput) {\n      ok\n      error\n    }\n  }\n": types.VerifyOtpDocument,
     "\n  mutation sendOtp {\n    sendOtp {\n      ok\n      error\n    }\n  }\n": types.SendOtpDocument,
-    "\n  mutation login($loginInput: LoginInput!) {\n    login(loginInput: $loginInput) {\n      ok\n      accessToken\n      refreshToken\n      expiresIn\n      user {\n        id\n        tel\n        name\n        role\n        verified\n      }\n      error\n    }\n  }\n": types.LoginDocument,
+    "\n  mutation login($loginInput: LoginInput!) {\n    login(loginInput: $loginInput) {\n      ok\n      accessToken\n      refreshToken\n      expiresIn\n      user {\n        id\n        tel\n        name\n        role\n        verified\n        balance\n      }\n      error\n    }\n  }\n": types.LoginDocument,
     "\n  mutation refreshToken {\n    refreshToken {\n      ok\n      accessToken\n      refreshToken\n      error\n    }\n  }\n": types.RefreshTokenDocument,
 };
 
@@ -64,7 +64,7 @@ export function gql(source: "\n  mutation sendOtp {\n    sendOtp {\n      ok\n  
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function gql(source: "\n  mutation login($loginInput: LoginInput!) {\n    login(loginInput: $loginInput) {\n      ok\n      accessToken\n      refreshToken\n      expiresIn\n      user {\n        id\n        tel\n        name\n        role\n        verified\n      }\n      error\n    }\n  }\n"): (typeof documents)["\n  mutation login($loginInput: LoginInput!) {\n    login(loginInput: $loginInput) {\n      ok\n      accessToken\n      refreshToken\n      expiresIn\n      user {\n        id\n        tel\n        name\n        role\n        verified\n      }\n      error\n    }\n  }\n"];
+export function gql(source: "\n  mutation login($loginInput: LoginInput!) {\n    login(loginInput: $loginInput) {\n      ok\n      accessToken\n      refreshToken\n      expiresIn\n      user {\n        id\n        tel\n        name\n        role\n        verified\n        balance\n      }\n      error\n    }\n  }\n"): (typeof documents)["\n  mutation login($loginInput: LoginInput!) {\n    login(loginInput: $loginInput) {\n      ok\n      accessToken\n      refreshToken\n      expiresIn\n      user {\n        id\n        tel\n        name\n        role\n        verified\n        balance\n      }\n      error\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

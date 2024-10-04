@@ -18,6 +18,7 @@ const LOGIN_MUTATION = gql`
         name
         role
         verified
+        balance
       }
       error
     }

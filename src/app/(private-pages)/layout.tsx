@@ -1,3 +1,4 @@
+import { RoleType } from "@/src/__generated__/graphql";
 import PrivateHeader from "@/src/components/layout/private-header";
 import PrivateSidebar from "@/src/components/layout/private-sidebar";
 import { pageLinks } from "@/src/constants";
@@ -15,12 +16,16 @@ const PrivatePagesLayout: FC<Props> = async ({
 }): Promise<JSX.Element> => {
   const session = await getServerSession(authOptions);
 
+  if (!session) {
+    redirect(pageLinks.login);
+  }
+
   if (session && !session.user.verified) {
     redirect(pageLinks.verify);
   }
 
-  if (!session) {
-    redirect(pageLinks.login);
+  if (session && session.user.role === RoleType.Searcher) {
+    redirect(pageLinks.home);
   }
 
   return (
