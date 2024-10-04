@@ -27,7 +27,11 @@ import {
 import AdddressMap from "./address-map";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useSession } from "next-auth/react";
+import { TentnantType } from "@/src/__generated__/graphql";
+import ImageDropzone from "@/src/components/image-dropzone";
+import VideoDropzone from "@/src/components/video-dropzone";
 
 const FormSchema = z.object({
   address_number: z
@@ -59,6 +63,63 @@ const FormSchema = z.object({
       required_error: "Tên đường là bắt buộc.",
     })
     .min(1, "Tên đường không được để trống."),
+
+  category: z
+    .string({
+      required_error: "Loại chuyên mục là bắt buộc.",
+    })
+    .min(1, "Loại chuyên mục không được để trống."),
+
+  title: z
+    .string({
+      required_error: "Tiêu đề là bắt buộc.",
+    })
+    .min(1, "Tiêu đề không được để trống."),
+
+  main_content: z
+    .string({
+      required_error: "Nội dung mô tả là bắt buộc.",
+    })
+    .min(1, "Nội dung mô tả không được để trống."),
+
+  price: z
+    .string({
+      required_error: "Giá cho thuê là bắt buộc.",
+    })
+    .min(1, "Giá cho thuê không được để trống."),
+
+  area: z
+    .string({
+      required_error: "Diện tích là bắt buộc.",
+    })
+    .min(1, "Diện tích không được để trống."),
+
+  tenant_type: z
+    .string({
+      required_error: "Đối tượng cho thuê là bắt buộc.",
+    })
+    .min(1, "Đối tượng cho thuê không được để trống."),
+
+  name: z
+    .string({
+      required_error: "Tên liên hệ là bắt buộc.",
+    })
+    .min(1, "Tên liên hệ không được để trống."),
+
+  images: z
+    .array(z.instanceof(File), {
+      required_error: "Hình ảnh là bắt buộc.",
+    })
+    .min(1, "Bạn phải tải lên ít nhất một hình ảnh."),
+
+  videos: z
+    .array(z.instanceof(File), {
+      required_error: "Video là bắt buộc.",
+    })
+    .min(1, "Bạn phải tải lên ít nhất một video.")
+    .refine((files) => files.every((file) => file.type.startsWith("video/")), {
+      message: "Chỉ các tệp video được cho phép.",
+    }),
 });
 
 interface Props {
@@ -66,6 +127,9 @@ interface Props {
 }
 
 const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
+  // Get Session
+  const { data: session } = useSession();
+
   // Districts States
   const [districts, setDistricts] = useState<{ id: string; name: string }[]>(
     []
@@ -168,6 +232,7 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
 
   // Get Streets & Set Streets
   const getStreets = async () => {
+    if (!choseWard) return;
     setGetStreetsLoading(true);
     const getBoudingBoxUrl = `${
       process.env.NEXT_PUBLIC_GET_BOUNDING_BOX_BASE_API
@@ -249,212 +314,456 @@ const NewPostForm: FC<Props> = ({ provinces }): JSX.Element => {
   }, [choseWard]);
 
   return (
-    <div className="flex gap-10">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 w-[60%]"
-        >
-          <div className="grid grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="province"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tỉnh/Thành phố</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="--Chọn Tỉnh/Thành phố--" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {provinces.map((province) => (
-                        <SelectItem value={province.id} key={province.id}>
-                          {province.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.province ? (
-                    <FormMessage />
-                  ) : (
-                    <FormDescription>
-                      Vui lòng chọn Tỉnh/Thành phố
-                    </FormDescription>
-                  )}
-                </FormItem>
-              )}
-            />
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Địa chỉ cho thuê</h2>
+      <div className="flex gap-10">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6 w-[60%]"
+          >
+            <div className="grid grid-cols-3 gap-4">
+              {/* Province */}
+              <FormField
+                control={form.control}
+                name="province"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tỉnh/Thành phố</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn Tỉnh/Thành phố" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {provinces.map((province) => (
+                          <SelectItem value={province.id} key={province.id}>
+                            {province.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.province ? (
+                      <FormMessage />
+                    ) : (
+                      <FormDescription>
+                        Vui lòng chọn Tỉnh/Thành phố
+                      </FormDescription>
+                    )}
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="district"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quận/Huyện</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={getDistrictsLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="--Chọn Quận/Huyện--" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {districts.map((district) => (
-                        <SelectItem value={district.id} key={district.id}>
-                          {district.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.district ? (
-                    <FormMessage />
-                  ) : (
-                    <FormDescription>Vui lòng chọn Quận/Huyện</FormDescription>
-                  )}
-                </FormItem>
-              )}
-            />
+              {/* District */}
+              <FormField
+                control={form.control}
+                name="district"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quận/Huyện</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={getDistrictsLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn Quận/Huyện" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {districts.map((district) => (
+                          <SelectItem value={district.id} key={district.id}>
+                            {district.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.district ? (
+                      <FormMessage />
+                    ) : (
+                      <FormDescription>
+                        Vui lòng chọn Quận/Huyện
+                      </FormDescription>
+                    )}
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="ward"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Phường/Xã</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={getWardsLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="--Chọn Phường/Xã--" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {wards.map((ward) => (
-                        <SelectItem value={ward.id} key={ward.id}>
-                          {ward.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.ward ? (
-                    <FormMessage />
-                  ) : (
-                    <FormDescription>Vui lòng chọn Phường/Xã</FormDescription>
-                  )}
-                </FormItem>
-              )}
-            />
+              {/* Ward */}
+              <FormField
+                control={form.control}
+                name="ward"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phường/Xã</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={getWardsLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn Phường/Xã" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {wards.map((ward) => (
+                          <SelectItem value={ward.id} key={ward.id}>
+                            {ward.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.ward ? (
+                      <FormMessage />
+                    ) : (
+                      <FormDescription>Vui lòng chọn Phường/Xã</FormDescription>
+                    )}
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="street"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Đường/Phố</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={getWardsLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="--Chọn Đường/Phố--" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {streets.map((street: string) => (
-                        <SelectItem value={street} key={street}>
-                          {street}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.ward ? (
-                    <FormMessage />
-                  ) : (
-                    <FormDescription>Vui lòng chọn Đường/Phố</FormDescription>
-                  )}
-                </FormItem>
-              )}
-            />
+              {/* Street */}
+              <FormField
+                control={form.control}
+                name="street"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Đường/Phố</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={getStreetsLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn Đường/Phố" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {streets.map((street: string) => (
+                          <SelectItem value={street} key={street}>
+                            {street}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.ward ? (
+                      <FormMessage />
+                    ) : (
+                      <FormDescription>Vui lòng chọn Đường/Phố</FormDescription>
+                    )}
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="address_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Số nhà</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nhập số nhà" {...field} />
-                  </FormControl>
-                  {errors.address_number ? (
-                    <FormMessage />
-                  ) : (
-                    <FormDescription>Vui lòng nhập số nhà</FormDescription>
+              {/* Address Number */}
+              <FormField
+                control={form.control}
+                name="address_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Số nhà</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập số nhà" {...field} />
+                    </FormControl>
+                    {errors.address_number ? (
+                      <FormMessage />
+                    ) : (
+                      <FormDescription>Vui lòng nhập số nhà</FormDescription>
+                    )}
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Full Address */}
+            <FormItem>
+              <FormLabel>Địa chỉ chính xác</FormLabel>
+              <Input
+                type="address"
+                id="full_address"
+                placeholder="Địa chỉ chính xác"
+                disabled
+                value={fullAddress}
+              />
+            </FormItem>
+
+            <h2 className="text-2xl font-bold">Thông tin mô tả</h2>
+            <div className="grid grid-cols-3 gap-4 !mt-4">
+              {/* Category */}
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Loại chuyên mục</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={getWardsLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn loại chuyên mục" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1">Phòng trọ, nhà trọ</SelectItem>
+                        <SelectItem value="2">Nhà thuê nguyên căn</SelectItem>
+                        <SelectGroup>
+                          <SelectLabel>Căn hộ</SelectLabel>
+                          <SelectItem value="3" className="pl-12">
+                            Cho thuê căn hộ
+                          </SelectItem>
+                          <SelectItem value="4" className="pl-12">
+                            Cho thuê căn hộ dịch vụ
+                          </SelectItem>
+                          <SelectItem value="5" className="pl-12">
+                            Cho thuê căn hộ mini
+                          </SelectItem>
+                        </SelectGroup>
+                        <SelectItem value="6">Tìm người ở ghép</SelectItem>
+                        <SelectItem value="7">
+                          Cho thuê mặt bằng, văn phòng
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.ward ? (
+                      <FormMessage />
+                    ) : (
+                      <FormDescription>
+                        Vui lòng chọn loại chuyên mục
+                      </FormDescription>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              {/* Title */}
+              <div className="col-span-2">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tiêu đề</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nhập tiêu đề" {...field} />
+                      </FormControl>
+                      {errors.address_number ? (
+                        <FormMessage />
+                      ) : (
+                        <FormDescription>Vui lòng nhập tiêu đề</FormDescription>
+                      )}
+                    </FormItem>
                   )}
-                </FormItem>
-              )}
-            />
+                />
+              </div>
+
+              {/* Main content */}
+              <div className="col-span-3">
+                <FormField
+                  control={form.control}
+                  name="main_content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nội dung mô tả</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Nhập nội dung mô tả"
+                          className="resize-none"
+                          rows={8}
+                          {...field}
+                        />
+                      </FormControl>
+                      {errors.address_number ? (
+                        <FormMessage />
+                      ) : (
+                        <FormDescription>
+                          Vui lòng nhập nội dung mô tả
+                        </FormDescription>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Name */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Thông tin liên hệ</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Cập nhật tên để thay đổi"
+                        {...field}
+                        disabled
+                        value={session?.user?.name}
+                      />
+                    </FormControl>
+                    <FormDescription>Cập nhật tên để thay đổi</FormDescription>
+                  </FormItem>
+                )}
+              />
+
+              {/* Phone number */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Số điện thoại</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Cập nhật SĐT để thay đổi"
+                        {...field}
+                        disabled
+                        value={session?.user?.tel}
+                      />
+                    </FormControl>
+                    <FormDescription>Cập nhật SĐT để thay đổi</FormDescription>
+                  </FormItem>
+                )}
+              />
+
+              {/* Tenant Type */}
+              <FormField
+                control={form.control}
+                name="tenant_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Đối tượng cho thuê</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={getWardsLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn đối tượng cho thuê" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={TentnantType.All}>Tất cả</SelectItem>
+                        <SelectItem value={TentnantType.Male}>Nam</SelectItem>
+                        <SelectItem value={TentnantType.Female}>Nữ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.ward ? (
+                      <FormMessage />
+                    ) : (
+                      <FormDescription>
+                        Vui lòng chọn loại chuyên mục
+                      </FormDescription>
+                    )}
+                  </FormItem>
+                )}
+              />
+
+              <div className="col-span-2">
+                {/* Price */}
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Giá cho thuê (Đồng/tháng)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Nhập số tiền phải trả trong 1 tháng"
+                          type="number"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Nhập số tiền phải trả trong 1 tháng
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="col-span-2">
+                {/* Area */}
+                <FormField
+                  control={form.control}
+                  name="area"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Diện tích (m²)</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Nhập diện tích theo đơn vị m²"
+                          type="number"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Nhập diện tích theo đơn vị m²
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            <h2 className="font-bold text-2xl">Hình ảnh</h2>
+            <p className="!mt-1 text-sm">
+              Cập nhật hình ảnh rõ ràng sẽ cho thuê nhanh hơn
+            </p>
+            <ImageDropzone setFormValue={form.setValue} error={errors.images} />
+
+            <h2 className="font-bold text-2xl">Video</h2>
+            <p className="!mt-1 text-sm">
+              Cập nhật video để người thuê có góc nhìn tổng quan
+            </p>
+            <VideoDropzone setFormValue={form.setValue} error={errors.videos} />
+
+            <Button type="submit">Submit</Button>
+          </form>
+        </Form>
+
+        <div className="flex-1 ">
+          <div className="w-full aspect-square">
+            {/* <AdddressMap
+              location={{
+                address_number: choseAddressNumber,
+                street: choseStreet,
+                province: initialChoseProvince?.name || "",
+                district: initialChoseDistrict?.name || "",
+                ward: initialChoseWard?.name || "",
+              }}
+            /> */}
           </div>
 
-          <FormItem>
-            <FormLabel>Địa chỉ chính xác</FormLabel>
-            <Input
-              type="address"
-              id="full_address"
-              placeholder="Địa chỉ chính xác"
-              disabled
-              value={fullAddress}
-            />
-          </FormItem>
-
-          <Button type="submit">Submit</Button>
-        </form>
-      </Form>
-
-      <div className="flex-1 ">
-        <div className="w-full aspect-square">
-          {/* <AdddressMap
-            location={{
-              address_number: choseAddressNumber,
-              street: choseStreet,
-              province: initialChoseProvince?.name || "",
-              district: initialChoseDistrict?.name || "",
-              ward: initialChoseWard?.name || "",
-            }}
-          /> */}
-        </div>
-
-        <div className="bg-[#FFF9E6] rounded-sm p-4 mt-6 mb-5 shadow-md text-sm">
-          <h2 className="font-bold text-xl mb-2">Lưu ý khi đăng tin:</h2>
-          <ul className="text-sm list-disc space-y-2 list-inside marker:text-muted-foreground">
-            <li>Nội dung phải viết bằng tiếng Việt có dấu.</li>
-            <li>
-              Tiêu đề tin không dài quá 100 kí tự Các bạn nên điền đầy đủ thông
-              tin vào các mục để tin đăng có hiệu quả hơn.
-            </li>
-            <li>
-              Để tăng độ tin cậy và tin rao được nhiều người quan tâm hơn, hãy
-              sửa vị trí tin rao của bạn trên bản đồ bằng cách kéo icon tới đúng
-              vị trí của tin rao.
-            </li>
-            <li>
-              Tin đăng có hình ảnh rõ ràng sẽ được xem và gọi gấp nhiều lần so
-              với tin rao không có ảnh.
-            </li>
-            <li>Hãy đăng ảnh để được giao dịch nhanh chóng!</li>
-          </ul>
+          <div className="bg-[#FFF9E6] rounded-sm p-4 mt-6 mb-5 shadow-md text-sm">
+            <h2 className="font-bold text-xl mb-2">Lưu ý khi đăng tin:</h2>
+            <ul className="text-sm list-disc space-y-2 list-inside marker:text-muted-foreground">
+              <li>Nội dung phải viết bằng tiếng Việt có dấu.</li>
+              <li>
+                Tiêu đề tin không dài quá 100 kí tự Các bạn nên điền đầy đủ
+                thông tin vào các mục để tin đăng có hiệu quả hơn.
+              </li>
+              <li>
+                Để tăng độ tin cậy và tin rao được nhiều người quan tâm hơn, hãy
+                sửa vị trí tin rao của bạn trên bản đồ bằng cách kéo icon tới
+                đúng vị trí của tin rao.
+              </li>
+              <li>
+                Tin đăng có hình ảnh rõ ràng sẽ được xem và gọi gấp nhiều lần so
+                với tin rao không có ảnh.
+              </li>
+              <li>Hãy đăng ảnh để được giao dịch nhanh chóng!</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

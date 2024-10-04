@@ -50,8 +50,6 @@ const AdddressMap: FC<Props> = ({ location }): JSX.Element => {
       const response = await fetch(url);
       const data = await response.json();
 
-      console.log(data);
-
       if (data.features && data.features.length > 0) {
         const coordinates = data.features[0].geometry.coordinates;
 
