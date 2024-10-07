@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatVNDCurrency } from "@/src/lib/utils";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 
 const packageInfo = [
   {
@@ -71,10 +72,25 @@ const packageInfo = [
   },
 ];
 
+const timeTypes = {
+  day: {
+    range: 90,
+    unit: "ngày",
+  },
+  week: {
+    range: 10,
+    unit: "tuần",
+  },
+  month: {
+    range: 12,
+    unit: "tháng",
+  },
+};
+
 const FormSchema = z.object({
   package_type: z.string(),
   time_type: z.string().optional(),
-  days: z.string().optional(),
+  duration: z.string().optional(),
   has_badge: z.boolean().optional(),
   checkout_type: z.string({
     required_error: "Vui lòng chọn phương thức thanh toán.",
@@ -99,52 +115,15 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
 
   // Derived States
   const chosePackageType = form.watch("package_type");
-  let perDayAmount = 0;
-  switch (chosePackageType) {
-    case PackageType.Free:
-      perDayAmount = 0;
-      break;
-    case PackageType.Basic:
-      perDayAmount = 2000;
-      break;
-    case PackageType.Vip:
-      perDayAmount = 50000;
-      break;
-    case PackageType.Vip1:
-      perDayAmount = 30000;
-      break;
-    case PackageType.Vip2:
-      perDayAmount = 20000;
-      break;
-    case PackageType.Vip3:
-      perDayAmount = 10000;
-      break;
-    default:
-      perDayAmount = 0;
-  }
-
   const choseTimeType = form.watch("time_type");
-  let timeRange = 1;
-  let timeUnit = "ngày";
-  switch (choseTimeType) {
-    case "day":
-      timeRange = 90;
-      timeUnit = "ngày";
-      break;
-    case "week":
-      timeRange = 10;
-      timeUnit = "tuần";
-      break;
-    case "month":
-      timeRange = 12;
-      timeUnit = "tháng";
-      break;
-    default:
-      timeRange = 1;
-      timeUnit = "ngày";
-  }
+  const choseDuration = form.watch("duration");
+  let timeUnit =
+    timeTypes[(choseTimeType as keyof typeof timeTypes) || "day"].unit;
 
-  const totalAmount = 0;
+  const totalAmount =
+    (packageInfo.find((p) => p.value === chosePackageType)?.[
+      (choseTimeType as keyof typeof timeTypes) || "day"
+    ] || 0) * Number(choseDuration) || 0;
 
   function onSubmit(data: z.infer<typeof FormSchema>) {}
 
@@ -223,10 +202,10 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                     )}
                   />
 
-                  {/* Days */}
+                  {/* Duration */}
                   <FormField
                     control={form.control}
-                    name="days"
+                    name="duration"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Số {timeUnit}</FormLabel>
@@ -243,7 +222,13 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                           </FormControl>
 
                           <SelectContent>
-                            {[...Array(timeRange).keys()].map((i: number) => (
+                            {[
+                              ...Array(
+                                timeTypes[
+                                  choseTimeType as keyof typeof timeTypes
+                                ]?.range || 0
+                              ).keys(),
+                            ].map((i: number) => (
                               <SelectItem key={i} value={(i + 1).toString()}>
                                 {i + 1} {timeUnit}
                               </SelectItem>
@@ -329,6 +314,25 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full hover:bg-gray-100 transition"
+                onClick={() => {}}
+              >
+                Quay lai
+              </Button>
+
+              <Button
+                type="submit"
+                className="w-full"
+                // disabled={!form.formState.isValid}
+              >
+                Thanh toán: {formatVNDCurrency(totalAmount)}
+              </Button>
+            </div>
           </form>
         </Form>
 
