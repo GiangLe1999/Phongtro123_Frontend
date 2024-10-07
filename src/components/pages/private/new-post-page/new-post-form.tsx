@@ -43,6 +43,7 @@ import ImageDropzone from "@/src/components/image-dropzone";
 import VideoDropzone from "@/src/components/video-dropzone";
 import { ArrowRightIcon } from "lucide-react";
 import Attention from "./attention";
+import { formatCurrency } from "@/src/lib/utils";
 
 const FormSchema = z.object({
   address_number: z
@@ -322,17 +323,6 @@ const NewPostForm: FC<Props> = ({
 
   // Formatted Currency
   const [formattedValue, setFormattedValue] = useState<string>("");
-
-  const formatCurrency = (value: string) => {
-    const numericValue = Number(value.replace(/,/g, ""));
-    if (isNaN(numericValue)) {
-      return "";
-    }
-    return numericValue.toLocaleString("en-US", {
-      style: "decimal",
-      maximumFractionDigits: 0,
-    });
-  };
 
   const priceHandleChange = (
     event: ChangeEvent<HTMLInputElement>,

@@ -23,6 +23,53 @@ import {
 import Attention from "./attention";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { formatVNDCurrency } from "@/src/lib/utils";
+import Image from "next/image";
+
+const packageInfo = [
+  {
+    title: "Tin miễn phí",
+    value: PackageType.Free,
+    day: 0,
+    week: 0,
+    month: 0,
+  },
+  {
+    title: "Tin thường",
+    value: PackageType.Basic,
+    day: 2000,
+    week: 12000,
+    month: 48000,
+  },
+  {
+    title: "Tin VIP 3",
+    value: PackageType.Vip3,
+    day: 10000,
+    week: 63000,
+    month: 240000,
+  },
+  {
+    title: "Tin VIP 2",
+    value: PackageType.Vip2,
+    day: 20000,
+    week: 133000,
+    month: 540000,
+  },
+  {
+    title: "Tin VIP 1",
+    value: PackageType.Vip1,
+    day: 30000,
+    week: 190000,
+    month: 800000,
+  },
+  {
+    title: "Tin VIP nổi bật",
+    value: PackageType.Vip,
+    day: 50000,
+    week: 315000,
+    month: 1200000,
+  },
+];
 
 const FormSchema = z.object({
   package_type: z.string(),
@@ -45,16 +92,66 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     mode: "onChange",
+    defaultValues: {
+      package_type: PackageType.Free,
+    },
   });
 
   // Derived States
   const chosePackageType = form.watch("package_type");
+  let perDayAmount = 0;
+  switch (chosePackageType) {
+    case PackageType.Free:
+      perDayAmount = 0;
+      break;
+    case PackageType.Basic:
+      perDayAmount = 2000;
+      break;
+    case PackageType.Vip:
+      perDayAmount = 50000;
+      break;
+    case PackageType.Vip1:
+      perDayAmount = 30000;
+      break;
+    case PackageType.Vip2:
+      perDayAmount = 20000;
+      break;
+    case PackageType.Vip3:
+      perDayAmount = 10000;
+      break;
+    default:
+      perDayAmount = 0;
+  }
+
+  const choseTimeType = form.watch("time_type");
+  let timeRange = 1;
+  let timeUnit = "ngày";
+  switch (choseTimeType) {
+    case "day":
+      timeRange = 90;
+      timeUnit = "ngày";
+      break;
+    case "week":
+      timeRange = 10;
+      timeUnit = "tuần";
+      break;
+    case "month":
+      timeRange = 12;
+      timeUnit = "tháng";
+      break;
+    default:
+      timeRange = 1;
+      timeUnit = "ngày";
+  }
+
+  const totalAmount = 0;
 
   function onSubmit(data: z.infer<typeof FormSchema>) {}
 
   return (
     <div>
       <h1 className="font-bold text-2xl line-clamp-1">{formValue?.title}</h1>
+
       <div className="flex gap-10">
         <Form {...form}>
           <form
@@ -79,24 +176,13 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={PackageType.Free}>
-                          Tin miễn phí (0₫/ngày)
-                        </SelectItem>
-                        <SelectItem value={PackageType.Basic}>
-                          Tin thường (2.000₫/ngày)
-                        </SelectItem>
-                        <SelectItem value={PackageType.Vip3}>
-                          Tin VIP 3 (10.000₫/ngày)
-                        </SelectItem>
-                        <SelectItem value={PackageType.Vip2}>
-                          Tin VIP 2 (20.000₫/ngày)
-                        </SelectItem>
-                        <SelectItem value={PackageType.Vip1}>
-                          Tin VIP 1 (30.000₫/ngày)
-                        </SelectItem>
-                        <SelectItem value={PackageType.Vip}>
-                          Tin VIP nổi bật (50.000₫/ngày)
-                        </SelectItem>
+                        {packageInfo.map((p) => (
+                          <SelectItem key={p.value} value={p.value}>
+                            {`${p.title} (${formatVNDCurrency(
+                              p[(choseTimeType as keyof typeof p) || "day"]
+                            )}/${timeUnit})`}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormDescription>Vui lòng chọn loại tin</FormDescription>
@@ -123,9 +209,9 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Ngày">Đăng theo ngày</SelectItem>
-                            <SelectItem value="Tuần">Đăng theo tuần</SelectItem>
-                            <SelectItem value="Tháng">
+                            <SelectItem value="day">Đăng theo ngày</SelectItem>
+                            <SelectItem value="week">Đăng theo tuần</SelectItem>
+                            <SelectItem value="month">
                               Đăng theo tháng
                             </SelectItem>
                           </SelectContent>
@@ -143,26 +229,30 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                     name="days"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Số ngày</FormLabel>
+                        <FormLabel>Số {timeUnit}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Chọn số ngày" />
+                              <SelectValue
+                                placeholder={`Chọn số ${timeUnit}`}
+                              />
                             </SelectTrigger>
                           </FormControl>
 
                           <SelectContent>
-                            {[...Array(90).keys()].map((i: number) => (
+                            {[...Array(timeRange).keys()].map((i: number) => (
                               <SelectItem key={i} value={(i + 1).toString()}>
-                                {i + 1} ngày
+                                {i + 1} {timeUnit}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormDescription>Vui lòng chọn số ngày</FormDescription>
+                        <FormDescription>
+                          Vui lòng chọn số {timeUnit}
+                        </FormDescription>
                       </FormItem>
                     )}
                   />
@@ -200,35 +290,38 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
               name="checkout_type"
               render={({ field }) => (
                 <FormItem className="space-y-3 !mt-4">
-                  <FormLabel>Notify me about...</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className="flex flex-col space-y-1"
+                      className="flex flex-col space-y-3"
                     >
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="current_account" />
+                          <RadioGroupItem value="account" />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Trừ tiền trong tài khoản Phongtro123 (Bạn đang có: TK
-                          Chính 0)
+                        <FormLabel className="!font-normal flex items-center gap-2 cursor-pointer">
+                          <Image
+                            src="/logo-phongtro-123.svg"
+                            alt="Thanh toán bằng số dư trong tài khoản Phongtro123"
+                            width={90}
+                            height={16.5}
+                          />
+                          Trừ tiền trong Tài khoản Phongtro123 (Bạn đang có: TK
+                          Chính{" "}
+                          {formatVNDCurrency(
+                            session?.user?.balance.toString() || 0
+                          )}
+                          )
                         </FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="mentions" />
+                          <RadioGroupItem value="qr" />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Direct messages and mentions
+                        <FormLabel className="!font-normal cursor-pointer">
+                          Thanh toán qua Thẻ ngân hàng / Ví điện tử
                         </FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="none" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Nothing</FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>

@@ -23,7 +23,10 @@ const NewPostPageContent: FC<Props> = ({ provinces }): JSX.Element => {
         pages={[{ name: "Đăng tin mới", link: pageLinks.post }]}
       />
 
-      <h1 className="font-bold text-3xl my-4">Đăng tin mới</h1>
+      <h1 className="font-bold text-3xl mt-4 mb-1">Đăng tin mới</h1>
+      <p className="text-muted-foreground mb-4 font-semibold text-emerald-600">
+        Bạn được quyền tạo tối đa 5 tin miễn phí
+      </p>
 
       <div className="w-full border-t"></div>
 
