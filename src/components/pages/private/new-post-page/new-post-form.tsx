@@ -686,7 +686,7 @@ const NewPostForm: FC<Props> = ({
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    {errors.ward ? (
+                    {errors.category ? (
                       <FormMessage />
                     ) : (
                       <FormDescription>
@@ -708,7 +708,7 @@ const NewPostForm: FC<Props> = ({
                       <FormControl>
                         <Input placeholder="Nhập tiêu đề" {...field} />
                       </FormControl>
-                      {errors.address_number ? (
+                      {errors.title ? (
                         <FormMessage />
                       ) : (
                         <FormDescription>Vui lòng nhập tiêu đề</FormDescription>
