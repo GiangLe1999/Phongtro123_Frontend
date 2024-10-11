@@ -144,17 +144,25 @@ interface Props {
   >;
   notSubmitValue:
     | {
-        ward_id: string;
+        ward_code: string;
         street: string;
         address_number: string;
+        filteredDistricts: District[] | undefined | [];
+        filteredWards: Ward[] | undefined | [];
+        filterStreets: string[] | undefined | [];
+        streetInputType: "text" | "select";
       }
     | undefined;
   setNotSubmitValue: Dispatch<
     SetStateAction<
       | {
-          ward_id: string;
+          ward_code: string;
           street: string;
           address_number: string;
+          filteredDistricts: District[] | undefined | [];
+          filteredWards: Ward[] | undefined | [];
+          filterStreets: string[] | undefined | [];
+          streetInputType: "text" | "select";
         }
       | undefined
     >
@@ -176,25 +184,28 @@ const NewPostForm: FC<Props> = ({
   const { data: session } = useSession();
 
   // Districts States
-  const [filteredDistricts, setFilteredDistricts] = useState<District[]>([]);
+  const [filteredDistricts, setFilteredDistricts] = useState<District[]>(
+    notSubmitValue?.filteredDistricts ? notSubmitValue?.filteredDistricts : []
+  );
 
   // Wards States
-  const [filteredWards, setFilteredWards] = useState<Ward[]>([]);
+  const [filteredWards, setFilteredWards] = useState<Ward[]>(
+    notSubmitValue?.filteredWards ? notSubmitValue?.filteredWards : []
+  );
 
   // Streets States
-  const [streets, setStreets] = useState<string[]>([]);
+  const [streets, setStreets] = useState<string[]>(
+    notSubmitValue?.filterStreets ? notSubmitValue?.filterStreets : []
+  );
   const [getStreetsLoading, setGetStreetsLoading] = useState(false);
   const [streetInputType, setStreetInputType] = useState<"text" | "select">(
-    "text"
+    notSubmitValue?.streetInputType ? notSubmitValue?.streetInputType : "text"
   );
 
   // Form States
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     mode: "onChange",
-    defaultValues: {
-      tenant_type: TentnantType.All,
-    },
   });
 
   // Derived States
@@ -336,7 +347,9 @@ const NewPostForm: FC<Props> = ({
   }, [choseWard]);
 
   // Formatted Currency
-  const [enteredAmount, setEnteredAmount] = useState<number>(0);
+  const [enteredAmount, setEnteredAmount] = useState<number>(
+    formValue?.price || 0
+  );
 
   // Set Default Values
   useEffect(() => {
@@ -346,6 +359,26 @@ const NewPostForm: FC<Props> = ({
     }
   }, [session]);
 
+  useEffect(() => {
+    if (formValue) {
+      form.setValue("area", formValue.area.toString());
+      form.setValue("category", formValue.category_id.toString());
+      form.setValue("main_content", formValue.main_content);
+      form.setValue("maps_embed_link", formValue.maps_embed_link);
+      form.setValue("title", formValue.title);
+      form.setValue("tenant_type", formValue.tenant_type);
+      form.setValue("price", formValue.price);
+      form.setValue("province", formValue.province_code);
+      form.setValue("district", formValue.district_code);
+    }
+
+    if (notSubmitValue) {
+      form.setValue("address_number", notSubmitValue.address_number);
+      form.setValue("ward", notSubmitValue.ward_code);
+      form.setValue("street", notSubmitValue.street);
+    }
+  }, [formValue, notSubmitValue]);
+
   // Submit Form
   function onSubmit(data: z.infer<typeof FormSchema>) {
     setFormValue({
@@ -353,7 +386,7 @@ const NewPostForm: FC<Props> = ({
       title: data.title,
       main_content: data.main_content,
       price: Number(data.price),
-      area: Number(data.area),
+      area: parseFloat(data.area),
       tenant_type: data.tenant_type as any,
       province_code: data.province,
       district_code: data.district,
@@ -366,7 +399,11 @@ const NewPostForm: FC<Props> = ({
     setNotSubmitValue({
       address_number: data.address_number,
       street: data.street,
-      ward_id: data.ward,
+      ward_code: data.ward,
+      filteredDistricts,
+      filteredWards,
+      filterStreets: streets || [],
+      streetInputType: streetInputType as "text" | "select",
     });
     if (data?.images?.length) {
       setMediaFormValue((prev) => ({
@@ -403,9 +440,7 @@ const NewPostForm: FC<Props> = ({
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={
-                        formValue?.province_code
-                          ? formValue?.province_code.toString()
-                          : ""
+                        formValue?.province_code ? formValue?.province_code : ""
                       }
                     >
                       <FormControl>
@@ -442,9 +477,7 @@ const NewPostForm: FC<Props> = ({
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={
-                        formValue?.district_code
-                          ? formValue?.district_code.toString()
-                          : ""
+                        formValue?.district_code ? formValue?.district_code : ""
                       }
                       disabled={!choseProvince}
                     >
@@ -481,11 +514,11 @@ const NewPostForm: FC<Props> = ({
                     <FormLabel>Phường/Xã</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      // defaultValue={
-                      //   notSubmitValue?.ward_cdvee
-                      //     ? notSubmitValue?.ward_cdvee.toString()
-                      //     : ""
-                      // }
+                      defaultValue={
+                        notSubmitValue?.ward_code
+                          ? notSubmitValue?.ward_code
+                          : ""
+                      }
                       disabled={!choseDistrict}
                     >
                       <FormControl>
@@ -511,7 +544,6 @@ const NewPostForm: FC<Props> = ({
               />
 
               {/* Street */}
-
               {streetInputType === "text" ? (
                 // Text input
                 <FormField
@@ -623,7 +655,11 @@ const NewPostForm: FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Loại chuyên mục</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      defaultValue={formValue?.category_id.toString() || ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Chọn loại chuyên mục" />
@@ -778,7 +814,11 @@ const NewPostForm: FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Đối tượng cho thuê</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={formValue?.tenant_type || TentnantType.All}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Chọn đối tượng cho thuê" />
@@ -829,9 +869,13 @@ const NewPostForm: FC<Props> = ({
                           }}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Nhập số tiền phải trả trong 1 tháng
-                      </FormDescription>
+                      {errors.price ? (
+                        <FormMessage />
+                      ) : (
+                        <FormDescription>
+                          Nhập số tiền phải trả trong 1 tháng
+                        </FormDescription>
+                      )}
                     </FormItem>
                   )}
                 />
@@ -852,9 +896,13 @@ const NewPostForm: FC<Props> = ({
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Nhập diện tích theo đơn vị m²
-                      </FormDescription>
+                      {errors.area ? (
+                        <FormMessage />
+                      ) : (
+                        <FormDescription>
+                          Nhập diện tích theo đơn vị m²
+                        </FormDescription>
+                      )}
                     </FormItem>
                   )}
                 />

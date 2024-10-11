@@ -186,10 +186,15 @@ const NewPostCheckout: FC<Props> = ({
   let timeUnit =
     timeTypes[(choseTimeType as keyof typeof timeTypes) || "day"].unit;
 
+  const numberOfDays =
+    (Number(choseDuration) || 0) *
+    (timeUnit === "ngày" ? 1 : timeUnit === "tuần" ? 7 : 30);
+
   const totalAmount =
-    (packageInfo.find((p) => p.value === chosePackageType)?.[
+    ((packageInfo.find((p) => p.value === chosePackageType)?.[
       (choseTimeType as keyof typeof timeTypes) || "day"
-    ] || 0) * Number(choseDuration) || 0;
+    ] || 0) * Number(choseDuration) || 0) +
+    (numberOfDays || 0) * (form.watch("has_badge") ? 2000 : 0);
 
   useEffect(() => {
     form.setValue("duration", "1");
@@ -427,8 +432,8 @@ const NewPostCheckout: FC<Props> = ({
                             width={90}
                             height={16.5}
                           />
-                          Trừ tiền trong Tài khoản Phongtro123 (Bạn đang có: TK
-                          Chính{" "}
+                          Trừ tiền trong Tài khoản Phongtro123 (TK chính của bạn
+                          đang có:{" "}
                           {formatVNDCurrency(
                             session?.user?.balance.toString() || 0
                           )}

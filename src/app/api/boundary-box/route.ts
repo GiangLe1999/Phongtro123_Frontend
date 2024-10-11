@@ -12,7 +12,7 @@ export async function POST(request: Request) {
 
     const data = await boundingBoxRes.json();
 
-    if (data) {
+    if (data.length > 0) {
       return NextResponse.json(data[0].boundingbox, { status: 200 });
     }
 

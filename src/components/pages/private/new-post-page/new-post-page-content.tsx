@@ -38,9 +38,13 @@ const NewPostPageContent: FC<Props> = ({
     videos: [],
   });
   const [notSubmitValue, setNotSubmitValue] = useState<{
-    ward_id: string;
+    ward_code: string;
     street: string;
     address_number: string;
+    filteredDistricts: District[] | undefined | [];
+    filteredWards: Ward[] | undefined | [];
+    filterStreets: string[] | undefined | [];
+    streetInputType: "text" | "select";
   }>();
 
   return (
