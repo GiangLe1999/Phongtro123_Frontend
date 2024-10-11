@@ -56,23 +56,23 @@ const GET_WARDS_QUERY = gql`
 `;
 
 const Page: NextPage<Props> = async () => {
+  const [provincesResult, districtsResult, wardsResult] = await Promise.all([
+    query({ query: GET_PROVINCES_QUERY }),
+    query({ query: GET_DISTRICTS_QUERY }),
+    query({ query: GET_WARDS_QUERY }),
+  ]);
+
   const {
     data: { getProvinces },
-  }: { data: { getProvinces: GetProvincesOutput } } = await query({
-    query: GET_PROVINCES_QUERY,
-  });
+  }: { data: { getProvinces: GetProvincesOutput } } = provincesResult;
 
   const {
     data: { getDistricts },
-  }: { data: { getDistricts: GetDistrictsOutput } } = await query({
-    query: GET_DISTRICTS_QUERY,
-  });
+  }: { data: { getDistricts: GetDistrictsOutput } } = districtsResult;
 
   const {
     data: { getWards },
-  }: { data: { getWards: GetWardsOutput } } = await query({
-    query: GET_WARDS_QUERY,
-  });
+  }: { data: { getWards: GetWardsOutput } } = wardsResult;
 
   return (
     <NewPostPageContent
