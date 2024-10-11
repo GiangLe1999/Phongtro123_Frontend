@@ -27,7 +27,7 @@ const NewPostPageContent: FC<Props> = ({
   // Get Provinces & Set Provinces
 
   const [showedContent, setShowedContent] = useState<"form" | "checkout">(
-    "checkout"
+    "form"
   );
   const [formValue, setFormValue] = useState<CreatePostingInput>();
   const [mediaFormValue, setMediaFormValue] = useState<{
