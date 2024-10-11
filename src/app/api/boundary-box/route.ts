@@ -12,10 +12,8 @@ export async function POST(request: Request) {
 
     const data = await boundingBoxRes.json();
 
-    const suburb = data.find((i: any) => i.addresstype === "suburb");
-
-    if (suburb) {
-      return NextResponse.json(suburb.boundingbox);
+    if (data) {
+      return NextResponse.json(data[0].boundingbox, { status: 200 });
     }
 
     return NextResponse.json(

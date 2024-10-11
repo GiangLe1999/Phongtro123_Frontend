@@ -20,6 +20,26 @@ export type Scalars = {
   Upload: { input: any; output: any; }
 };
 
+export type AdministrativeRegion = {
+  __typename?: 'AdministrativeRegion';
+  code_name?: Maybe<Scalars['String']['output']>;
+  code_name_en?: Maybe<Scalars['String']['output']>;
+  id: Scalars['Float']['output'];
+  name: Scalars['String']['output'];
+  name_en: Scalars['String']['output'];
+};
+
+export type AdministrativeUnit = {
+  __typename?: 'AdministrativeUnit';
+  code_name?: Maybe<Scalars['String']['output']>;
+  code_name_en?: Maybe<Scalars['String']['output']>;
+  full_name?: Maybe<Scalars['String']['output']>;
+  full_name_en?: Maybe<Scalars['String']['output']>;
+  id: Scalars['Float']['output'];
+  short_name?: Maybe<Scalars['String']['output']>;
+  short_name_en?: Maybe<Scalars['String']['output']>;
+};
+
 export type Category = {
   __typename?: 'Category';
   id: Scalars['ID']['output'];
@@ -49,11 +69,14 @@ export type CreatePostingInput = {
   address: Scalars['String']['input'];
   area: Scalars['Float']['input'];
   category_id: Scalars['Float']['input'];
-  district_id: Scalars['Float']['input'];
+  days: Scalars['Float']['input'];
+  district_code: Scalars['String']['input'];
+  has_badge: Scalars['Boolean']['input'];
   main_content: Scalars['String']['input'];
+  maps_embed_link: Scalars['String']['input'];
   package_type?: PackageType;
   price: Scalars['Float']['input'];
-  province_id: Scalars['Float']['input'];
+  province_code: Scalars['String']['input'];
   tenant_type: TentnantType;
   title: Scalars['String']['input'];
 };
@@ -68,6 +91,7 @@ export type CreatePostingOutput = {
   __typename?: 'CreatePostingOutput';
   error?: Maybe<Scalars['String']['output']>;
   ok: Scalars['Boolean']['output'];
+  posting?: Maybe<Posting>;
 };
 
 export type CreateUserInput = {
@@ -85,11 +109,36 @@ export type CreateUserOutput = {
 
 export type District = {
   __typename?: 'District';
-  id: Scalars['ID']['output'];
+  administrative_unit?: Maybe<AdministrativeUnit>;
+  code: Scalars['String']['output'];
+  code_name?: Maybe<Scalars['String']['output']>;
+  full_name?: Maybe<Scalars['String']['output']>;
+  full_name_en?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  name_en?: Maybe<Scalars['String']['output']>;
   postings: Array<Posting>;
   province?: Maybe<Province>;
-  slug: Scalars['String']['output'];
+};
+
+export type GetDistrictsOutput = {
+  __typename?: 'GetDistrictsOutput';
+  districts?: Maybe<Array<District>>;
+  error?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
+};
+
+export type GetProvincesOutput = {
+  __typename?: 'GetProvincesOutput';
+  error?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
+  provinces?: Maybe<Array<Province>>;
+};
+
+export type GetWardsOutput = {
+  __typename?: 'GetWardsOutput';
+  error?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
+  wards?: Maybe<Array<Ward>>;
 };
 
 export type LoginInput = {
@@ -181,8 +230,9 @@ export type Posting = {
   createdAt: Scalars['DateTime']['output'];
   district: District;
   expired_at?: Maybe<Scalars['DateTime']['output']>;
+  has_badge: Scalars['Boolean']['output'];
   id: Scalars['Float']['output'];
-  images: Array<Scalars['String']['output']>;
+  images?: Maybe<Array<Scalars['String']['output']>>;
   is_crawled: Scalars['Boolean']['output'];
   main_content: Scalars['String']['output'];
   maps_embed_link: Scalars['String']['output'];
@@ -199,15 +249,22 @@ export type Posting = {
 
 export type Province = {
   __typename?: 'Province';
-  districts: Array<District>;
-  id: Scalars['ID']['output'];
+  administrative_region?: Maybe<AdministrativeRegion>;
+  administrative_unit?: Maybe<AdministrativeUnit>;
+  code: Scalars['String']['output'];
+  code_name?: Maybe<Scalars['String']['output']>;
+  full_name: Scalars['String']['output'];
+  full_name_en?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  name_en?: Maybe<Scalars['String']['output']>;
   postings: Array<Posting>;
-  slug: Scalars['String']['output'];
 };
 
 export type Query = {
   __typename?: 'Query';
+  getDistricts: GetDistrictsOutput;
+  getProvinces: GetProvincesOutput;
+  getWards: GetWardsOutput;
   me: User;
 };
 
@@ -274,12 +331,55 @@ export type VerifyOtpOutput = {
   ok: Scalars['Boolean']['output'];
 };
 
+export type Ward = {
+  __typename?: 'Ward';
+  administrative_unit?: Maybe<AdministrativeUnit>;
+  code: Scalars['String']['output'];
+  code_name?: Maybe<Scalars['String']['output']>;
+  district?: Maybe<District>;
+  full_name?: Maybe<Scalars['String']['output']>;
+  full_name_en?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  name_en?: Maybe<Scalars['String']['output']>;
+};
+
 export type CreateUserMutationVariables = Exact<{
   createUserInput: CreateUserInput;
 }>;
 
 
 export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'CreateUserOutput', ok: boolean, error?: string | null } };
+
+export type GetProvincesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetProvincesQuery = { __typename?: 'Query', getProvinces: { __typename?: 'GetProvincesOutput', ok: boolean, error?: string | null, provinces?: Array<{ __typename?: 'Province', name: string, code: string }> | null } };
+
+export type GetDistrictsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetDistrictsQuery = { __typename?: 'Query', getDistricts: { __typename?: 'GetDistrictsOutput', ok: boolean, error?: string | null, districts?: Array<{ __typename?: 'District', name: string, code: string, province?: { __typename?: 'Province', code: string } | null }> | null } };
+
+export type GetWardsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetWardsQuery = { __typename?: 'Query', getWards: { __typename?: 'GetWardsOutput', ok: boolean, error?: string | null, wards?: Array<{ __typename?: 'Ward', name: string, district?: { __typename?: 'District', code: string } | null }> | null } };
+
+export type CreatePostingMutationVariables = Exact<{
+  createPostingInput: CreatePostingInput;
+}>;
+
+
+export type CreatePostingMutation = { __typename?: 'Mutation', createPosting: { __typename?: 'CreatePostingOutput', ok: boolean, error?: string | null, posting?: { __typename?: 'Posting', id: number } | null } };
+
+export type CreatePostingMediaMutationVariables = Exact<{
+  posting_id: Scalars['Float']['input'];
+  images?: InputMaybe<Array<Scalars['Upload']['input']> | Scalars['Upload']['input']>;
+  videos?: InputMaybe<Array<Scalars['Upload']['input']> | Scalars['Upload']['input']>;
+}>;
+
+
+export type CreatePostingMediaMutation = { __typename?: 'Mutation', createPostingMedia: { __typename?: 'CreatePostingMediaOutput', ok: boolean, error?: string | null } };
 
 export type CreateNewPasswordMutationVariables = Exact<{
   createNewPasswordInput: CreateNewPasswordInput;
@@ -328,6 +428,11 @@ export type RefreshTokenMutation = { __typename?: 'Mutation', refreshToken: { __
 
 
 export const CreateUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createUser"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"createUserInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateUserInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createUser"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"createUserInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"createUserInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<CreateUserMutation, CreateUserMutationVariables>;
+export const GetProvincesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getProvinces"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getProvinces"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}},{"kind":"Field","name":{"kind":"Name","value":"provinces"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"code"}}]}}]}}]}}]} as unknown as DocumentNode<GetProvincesQuery, GetProvincesQueryVariables>;
+export const GetDistrictsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getDistricts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getDistricts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}},{"kind":"Field","name":{"kind":"Name","value":"districts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"province"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetDistrictsQuery, GetDistrictsQueryVariables>;
+export const GetWardsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getWards"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getWards"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}},{"kind":"Field","name":{"kind":"Name","value":"wards"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"district"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetWardsQuery, GetWardsQueryVariables>;
+export const CreatePostingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createPosting"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"createPostingInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreatePostingInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createPosting"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"createPostingInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"createPostingInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"posting"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<CreatePostingMutation, CreatePostingMutationVariables>;
+export const CreatePostingMediaDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createPostingMedia"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"posting_id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"images"}},"type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Upload"}}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"videos"}},"type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Upload"}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createPostingMedia"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"posting_id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"posting_id"}}},{"kind":"Argument","name":{"kind":"Name","value":"images"},"value":{"kind":"Variable","name":{"kind":"Name","value":"images"}}},{"kind":"Argument","name":{"kind":"Name","value":"videos"},"value":{"kind":"Variable","name":{"kind":"Name","value":"videos"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<CreatePostingMediaMutation, CreatePostingMediaMutationVariables>;
 export const CreateNewPasswordDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createNewPassword"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"createNewPasswordInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateNewPasswordInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createNewPassword"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"createNewPasswordInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"createNewPasswordInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<CreateNewPasswordMutation, CreateNewPasswordMutationVariables>;
 export const VerifyForgotPasswordOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"verifyForgotPasswordOtp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"verifyForgotPasswordOtpInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"VerifyForgotPasswordOtpInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifyForgotPasswordOtp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"verifyForgotPasswordOtpInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"verifyForgotPasswordOtpInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<VerifyForgotPasswordOtpMutation, VerifyForgotPasswordOtpMutationVariables>;
 export const SendForgotPasswordOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"sendForgotPasswordOtp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sendForgotPasswordOtpInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SendOtpInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"sendForgotPasswordOtp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sendForgotPasswordOtpInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sendForgotPasswordOtpInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ok"}},{"kind":"Field","name":{"kind":"Name","value":"error"}}]}}]}}]} as unknown as DocumentNode<SendForgotPasswordOtpMutation, SendForgotPasswordOtpMutationVariables>;

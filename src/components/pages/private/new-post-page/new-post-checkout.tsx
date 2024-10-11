@@ -1,6 +1,14 @@
-import { CreatePostingInput, PackageType } from "@/src/__generated__/graphql";
+import {
+  CreatePostingInput,
+  CreatePostingMediaMutation,
+  CreatePostingMediaMutationVariables,
+  CreatePostingMutation,
+  CreatePostingMutationVariables,
+  CreatePostingOutput,
+  PackageType,
+} from "@/src/__generated__/graphql";
 import { useSession } from "next-auth/react";
-import { FC } from "react";
+import { Dispatch, FC, SetStateAction, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -26,6 +34,38 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatVNDCurrency } from "@/src/lib/utils";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { gql, useMutation } from "@apollo/client";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+
+const CREATE_POSTING_MUTATION = gql`
+  mutation createPosting($createPostingInput: CreatePostingInput!) {
+    createPosting(createPostingInput: $createPostingInput) {
+      posting {
+        id
+      }
+      ok
+      error
+    }
+  }
+`;
+
+const CREATE_POSTING_MEDIA_MUTATION = gql`
+  mutation createPostingMedia(
+    $posting_id: Float!
+    $images: [Upload!]
+    $videos: [Upload!]
+  ) {
+    createPostingMedia(
+      posting_id: $posting_id
+      images: $images
+      videos: $videos
+    ) {
+      ok
+      error
+    }
+  }
+`;
 
 const packageInfo = [
   {
@@ -99,10 +139,33 @@ const FormSchema = z.object({
 
 interface Props {
   formValue: CreatePostingInput | undefined;
+  setShowedContent: Dispatch<SetStateAction<"form" | "checkout">>;
+  previousFormValue: CreatePostingInput | undefined;
+  mediaFormValue: { images: File[]; videos: File[] };
 }
 
-const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
+const NewPostCheckout: FC<Props> = ({
+  formValue,
+  setShowedContent,
+  previousFormValue,
+  mediaFormValue,
+}): JSX.Element => {
+  const router = useRouter();
+
+  // Session
   const { data: session } = useSession();
+
+  // Grapqh mutation
+  const [createPostingMutation, { loading: createPostingLoading }] =
+    useMutation<CreatePostingMutation, CreatePostingMutationVariables>(
+      CREATE_POSTING_MUTATION
+    );
+
+  const [createPostingMediaMutation, { loading: createPostingMediaLoading }] =
+    useMutation<
+      CreatePostingMediaMutation,
+      CreatePostingMediaMutationVariables
+    >(CREATE_POSTING_MEDIA_MUTATION);
 
   // Form States
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -110,6 +173,9 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
     mode: "onChange",
     defaultValues: {
       package_type: PackageType.Free,
+      time_type: "day",
+      duration: "1",
+      checkout_type: "payment",
     },
   });
 
@@ -125,7 +191,79 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
       (choseTimeType as keyof typeof timeTypes) || "day"
     ] || 0) * Number(choseDuration) || 0;
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {}
+  useEffect(() => {
+    form.setValue("duration", "1");
+  }, [choseTimeType, form]);
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    if (data.package_type === PackageType.Free && previousFormValue) {
+      try {
+        const { data } = await createPostingMutation({
+          variables: {
+            createPostingInput: { ...previousFormValue, days: 730 },
+          },
+        });
+
+        if (data?.createPosting?.ok && data?.createPosting?.posting) {
+          if (mediaFormValue.images?.length || mediaFormValue.videos?.length) {
+            console.log(mediaFormValue.images, mediaFormValue.videos);
+
+            try {
+              const { data: createPostingMediaData } =
+                await createPostingMediaMutation({
+                  variables: {
+                    posting_id: data.createPosting.posting.id,
+                    images: mediaFormValue.images,
+                    videos: mediaFormValue.videos,
+                  },
+                });
+
+              if (createPostingMediaData?.createPostingMedia?.error) {
+                return toast.error(
+                  createPostingMediaData?.createPostingMedia?.error,
+                  {
+                    description: "Vui lòng kiểm tra lại video / hình ảnh.",
+                    action: {
+                      label: "Okay",
+                      onClick: () => setShowedContent("form"),
+                    },
+                  }
+                );
+              }
+
+              if (createPostingMediaData?.createPostingMedia?.ok) {
+                toast.success("Tạo bài đăng thành công", {
+                  description: "Vui lòng đăng nhập vào tài khoản để sử dụng.",
+                });
+              }
+            } catch (error) {
+              console.log(error);
+              return toast.error("Tạo bài đăng thất bại", {
+                description: "Chúng tôi sẽ sớm khắc phục vấn đề.",
+              });
+            }
+          }
+
+          toast.success("Tạo bài đăng thành công", {
+            description: "Vui lòng đăng nhập vào tài khoản để sử dụng.",
+          });
+          router.replace("/");
+        } else {
+          toast.error(data?.createPosting?.error, {
+            description: "Vui lòng kiểm tra lại thông tin bài đăng.",
+            action: {
+              label: "Okay",
+              onClick: () => setShowedContent("form"),
+            },
+          });
+        }
+      } catch (error) {
+        toast.error("Tạo bài đăng thất bại", {
+          description: "Chúng tôi sẽ sớm khắc phục vấn đề.",
+        });
+      }
+    }
+  }
 
   return (
     <div>
@@ -145,10 +283,7 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Loại tin</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Chọn loại tin" />
@@ -180,7 +315,7 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                         <FormLabel>Gói thời gian</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -211,7 +346,7 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
                         <FormLabel>Số {timeUnit}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -318,18 +453,13 @@ const NewPostCheckout: FC<Props> = ({ formValue }): JSX.Element => {
             <div className="grid grid-cols-2 gap-4">
               <Button
                 type="button"
-                variant="outline"
-                className="w-full hover:bg-gray-100 transition"
-                onClick={() => {}}
+                variant="destructive"
+                onClick={() => setShowedContent("form")}
               >
-                Quay lai
+                Quay lại
               </Button>
 
-              <Button
-                type="submit"
-                className="w-full"
-                // disabled={!form.formState.isValid}
-              >
+              <Button type="submit" disabled={!form.formState.isValid}>
                 Thanh toán: {formatVNDCurrency(totalAmount)}
               </Button>
             </div>

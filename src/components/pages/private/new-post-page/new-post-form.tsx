@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  ChangeEvent,
-  Dispatch,
-  FC,
-  SetStateAction,
-  use,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { Dispatch, FC, SetStateAction, useEffect, useState } from "react";
 
 import {
   Select,
@@ -38,12 +29,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "next-auth/react";
-import { CreatePostingInput, TentnantType } from "@/src/__generated__/graphql";
+import {
+  CreatePostingInput,
+  District,
+  Maybe,
+  PackageType,
+  Province,
+  TentnantType,
+  Ward,
+} from "@/src/__generated__/graphql";
 import ImageDropzone from "@/src/components/image-dropzone";
 import VideoDropzone from "@/src/components/video-dropzone";
 import { ArrowRightIcon } from "lucide-react";
 import Attention from "./attention";
-import { formatCurrency } from "@/src/lib/utils";
+import { regexes } from "@/src/constants";
 
 const FormSchema = z.object({
   address_number: z
@@ -95,7 +94,7 @@ const FormSchema = z.object({
     .min(1, "Nội dung mô tả không được để trống."),
 
   price: z
-    .string({
+    .number({
       required_error: "Giá cho thuê là bắt buộc.",
     })
     .min(1, "Giá cho thuê không được để trống."),
@@ -112,6 +111,13 @@ const FormSchema = z.object({
     })
     .min(1, "Đối tượng cho thuê không được để trống."),
 
+  maps_embed_link: z
+    .string({
+      required_error: "Link Google Maps là bắt buộc.",
+    })
+    .min(1, "Link Google Maps không được để trống.")
+    .regex(regexes.maps_embed_link, "Link Google Maps không hợp lệ."),
+
   name: z.string().min(1),
 
   tel: z.string().min(1),
@@ -127,28 +133,53 @@ const FormSchema = z.object({
 });
 
 interface Props {
-  provinces: { id: string; name: string }[];
+  provinces: Maybe<Province[]> | undefined | [];
+  districts: Maybe<District[]> | undefined | [];
+  wards: Maybe<Ward[]> | undefined | [];
+  formValue: CreatePostingInput | undefined;
   setFormValue: Dispatch<SetStateAction<CreatePostingInput | undefined>>;
   setShowedContent: Dispatch<SetStateAction<"form" | "checkout">>;
+  setMediaFormValue: Dispatch<
+    SetStateAction<{ images: File[]; videos: File[] }>
+  >;
+  notSubmitValue:
+    | {
+        ward_id: string;
+        street: string;
+        address_number: string;
+      }
+    | undefined;
+  setNotSubmitValue: Dispatch<
+    SetStateAction<
+      | {
+          ward_id: string;
+          street: string;
+          address_number: string;
+        }
+      | undefined
+    >
+  >;
 }
 
 const NewPostForm: FC<Props> = ({
   provinces,
+  districts,
+  wards,
+  formValue,
   setFormValue,
   setShowedContent,
+  setMediaFormValue,
+  notSubmitValue,
+  setNotSubmitValue,
 }): JSX.Element => {
   // Get Session
   const { data: session } = useSession();
 
   // Districts States
-  const [districts, setDistricts] = useState<{ id: string; name: string }[]>(
-    []
-  );
-  const [getDistrictsLoading, setGetDistrictsLoading] = useState(false);
+  const [filteredDistricts, setFilteredDistricts] = useState<District[]>([]);
 
   // Wards States
-  const [wards, setWards] = useState<{ id: string; name: string }[]>([]);
-  const [getWardsLoading, setGetWardsLoading] = useState(false);
+  const [filteredWards, setFilteredWards] = useState<Ward[]>([]);
 
   // Streets States
   const [streets, setStreets] = useState<string[]>([]);
@@ -161,18 +192,21 @@ const NewPostForm: FC<Props> = ({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     mode: "onChange",
+    defaultValues: {
+      tenant_type: TentnantType.All,
+    },
   });
 
   // Derived States
   const errors = form.formState.errors;
   const choseProvince = form.watch("province");
-  const initialChoseProvince = provinces.find((p) => p.id === choseProvince);
+  const initialChoseProvince = provinces?.find((p) => p.code === choseProvince);
 
   const choseDistrict = form.watch("district");
-  const initialChoseDistrict = districts.find((d) => d.id === choseDistrict);
+  const initialChoseDistrict = districts?.find((d) => d.code === choseDistrict);
 
   const choseWard = form.watch("ward");
-  const initialChoseWard = wards.find((w) => w.id === choseWard);
+  const initialChoseWard = wards?.find((w) => w.code === choseWard);
 
   const choseStreet = form.watch("street");
   const choseAddressNumber = form.watch("address_number");
@@ -185,52 +219,30 @@ const NewPostForm: FC<Props> = ({
     choseProvince ? `${initialChoseProvince?.name}` : ""
   }`;
 
-  // Get Districts & Set Districts
-  const getDistricts = async () => {
-    setGetDistrictsLoading(true);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_LOCATION_LIST_BASE_API}/2/${choseProvince}.htm`
-      );
-
-      if (!res.ok) {
-        console.log("Lấy dữ liệu quận/huyện không thành công.");
-      }
-
-      const { data } = await res.json();
-      setDistricts(data);
-      setGetDistrictsLoading(false);
-    } catch (error) {
-      console.log("Lấy dữ liệu quận/huyện không thành công.");
-      setGetDistrictsLoading(false);
-    }
+  // Filter Districts
+  const filterDistricts = () => {
+    if (!choseProvince) return;
+    const districtsOfProvince = districts?.filter(
+      (d) => d?.province?.code === choseProvince
+    );
+    setFilteredDistricts(districtsOfProvince || []);
   };
+
   useEffect(() => {
-    getDistricts();
+    filterDistricts();
   }, [choseProvince]);
 
   // Get Wards & Set Wards
-  const getWards = async () => {
-    setGetWardsLoading(true);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_LOCATION_LIST_BASE_API}/3/${choseDistrict}.htm`
-      );
-
-      if (!res.ok) {
-        console.log("Lấy dữ liệu phường/xã không thành công.");
-      }
-
-      const { data } = await res.json();
-      setWards(data);
-      setGetWardsLoading(false);
-    } catch (error) {
-      console.log("Lấy dữ liệu phường/xã không thành công.");
-      setGetWardsLoading(false);
-    }
+  const filterWards = () => {
+    if (!choseDistrict) return;
+    const wardsOfDistrict = wards?.filter(
+      (w) => w?.district?.code === choseDistrict
+    );
+    setFilteredWards(wardsOfDistrict || []);
   };
+
   useEffect(() => {
-    getWards();
+    filterWards();
   }, [choseDistrict]);
 
   // Get Streets & Set Streets
@@ -240,6 +252,9 @@ const NewPostForm: FC<Props> = ({
     const getBoudingBoxUrl = `${
       process.env.NEXT_PUBLIC_GET_BOUNDING_BOX_BASE_API
     }${initialChoseWard?.name.replace(
+      / /g,
+      "+"
+    )},${initialChoseDistrict?.name.replace(
       / /g,
       "+"
     )},${initialChoseProvince?.name.replace(
@@ -314,7 +329,6 @@ const NewPostForm: FC<Props> = ({
     } catch (error) {
       console.log("Lấy bounding box của phường/xã không thành công.");
       setStreetInputType("text");
-      setGetWardsLoading(false);
     }
   };
   useEffect(() => {
@@ -322,17 +336,7 @@ const NewPostForm: FC<Props> = ({
   }, [choseWard]);
 
   // Formatted Currency
-  const [formattedValue, setFormattedValue] = useState<string>("");
-
-  const priceHandleChange = (
-    event: ChangeEvent<HTMLInputElement>,
-    onChange: (value: number) => void
-  ) => {
-    const { value } = event.target;
-    const numericValue = Number(value);
-    onChange(Number(numericValue));
-    setFormattedValue(formatCurrency(value));
-  };
+  const [enteredAmount, setEnteredAmount] = useState<number>(0);
 
   // Set Default Values
   useEffect(() => {
@@ -351,10 +355,31 @@ const NewPostForm: FC<Props> = ({
       price: Number(data.price),
       area: Number(data.area),
       tenant_type: data.tenant_type as any,
-      province_id: Number(data.province),
-      district_id: Number(data.district),
+      province_code: data.province,
+      district_code: data.district,
       category_id: Number(data.category),
+      days: 0,
+      has_badge: false,
+      package_type: PackageType.Free,
+      maps_embed_link: data.maps_embed_link,
     });
+    setNotSubmitValue({
+      address_number: data.address_number,
+      street: data.street,
+      ward_id: data.ward,
+    });
+    if (data?.images?.length) {
+      setMediaFormValue((prev) => ({
+        images: data.images || [],
+        videos: prev.videos || [],
+      }));
+    }
+    if (data?.videos?.length) {
+      setMediaFormValue((prev) => ({
+        images: prev.images || [],
+        videos: data.videos || [],
+      }));
+    }
     setShowedContent("checkout");
   }
 
@@ -377,7 +402,11 @@ const NewPostForm: FC<Props> = ({
                     <FormLabel>Tỉnh/Thành phố</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      defaultValue={
+                        formValue?.province_code
+                          ? formValue?.province_code.toString()
+                          : ""
+                      }
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -385,8 +414,8 @@ const NewPostForm: FC<Props> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {provinces.map((province) => (
-                          <SelectItem value={province.id} key={province.id}>
+                        {provinces?.map((province) => (
+                          <SelectItem value={province.code} key={province.code}>
                             {province.name}
                           </SelectItem>
                         ))}
@@ -412,8 +441,12 @@ const NewPostForm: FC<Props> = ({
                     <FormLabel>Quận/Huyện</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={getDistrictsLoading}
+                      defaultValue={
+                        formValue?.district_code
+                          ? formValue?.district_code.toString()
+                          : ""
+                      }
+                      disabled={!choseProvince}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -421,8 +454,8 @@ const NewPostForm: FC<Props> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {districts.map((district) => (
-                          <SelectItem value={district.id} key={district.id}>
+                        {filteredDistricts.map((district) => (
+                          <SelectItem value={district.code} key={district.code}>
                             {district.name}
                           </SelectItem>
                         ))}
@@ -448,8 +481,12 @@ const NewPostForm: FC<Props> = ({
                     <FormLabel>Phường/Xã</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={getWardsLoading}
+                      // defaultValue={
+                      //   notSubmitValue?.ward_cdvee
+                      //     ? notSubmitValue?.ward_cdvee.toString()
+                      //     : ""
+                      // }
+                      disabled={!choseDistrict}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -457,8 +494,8 @@ const NewPostForm: FC<Props> = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {wards.map((ward) => (
-                          <SelectItem value={ward.id} key={ward.id}>
+                        {filteredWards.map((ward) => (
+                          <SelectItem value={ward.code} key={ward.code}>
                             {ward.name}
                           </SelectItem>
                         ))}
@@ -487,6 +524,7 @@ const NewPostForm: FC<Props> = ({
                         <Input
                           placeholder="Nhập Đường/Phố"
                           disabled={getStreetsLoading}
+                          defaultValue={notSubmitValue?.street || ""}
                           {...field}
                         />
                       </FormControl>
@@ -509,7 +547,9 @@ const NewPostForm: FC<Props> = ({
                       <FormLabel>Đường/Phố</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        defaultValue={
+                          notSubmitValue?.street ? notSubmitValue?.street : ""
+                        }
                         disabled={getStreetsLoading}
                       >
                         <FormControl>
@@ -549,6 +589,7 @@ const NewPostForm: FC<Props> = ({
                         placeholder="Nhập số nhà"
                         {...field}
                         type="number"
+                        defaultValue={notSubmitValue?.address_number || ""}
                       />
                     </FormControl>
                     {errors.address_number ? (
@@ -582,11 +623,7 @@ const NewPostForm: FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Loại chuyên mục</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={getWardsLoading}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Chọn loại chuyên mục" />
@@ -639,6 +676,29 @@ const NewPostForm: FC<Props> = ({
                         <FormMessage />
                       ) : (
                         <FormDescription>Vui lòng nhập tiêu đề</FormDescription>
+                      )}
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Map URL */}
+              <div className="col-span-3">
+                <FormField
+                  control={form.control}
+                  name="maps_embed_link"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Link Google Maps</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nhập link Google Maps" {...field} />
+                      </FormControl>
+                      {errors.address_number ? (
+                        <FormMessage />
+                      ) : (
+                        <FormDescription>
+                          Vui lòng nhập link Google Maps
+                        </FormDescription>
                       )}
                     </FormItem>
                   )}
@@ -718,11 +778,7 @@ const NewPostForm: FC<Props> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Đối tượng cho thuê</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      disabled={getWardsLoading}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Chọn đối tượng cho thuê" />
@@ -757,10 +813,20 @@ const NewPostForm: FC<Props> = ({
                         <Input
                           placeholder="Nhập số tiền phải trả trong 1 tháng"
                           type="text"
-                          value={formattedValue}
-                          onChange={(e) => priceHandleChange(e, field.onChange)}
-                          onBlur={field.onBlur}
-                          ref={field.ref}
+                          {...field}
+                          value={enteredAmount.toLocaleString("en-US", {
+                            style: "decimal",
+                            maximumFractionDigits: 0,
+                          })}
+                          onChange={(e) => {
+                            const numeralValue = e.target.value.replace(
+                              /[^0-9.]/g,
+                              ""
+                            );
+                            const formattedValue = parseInt(numeralValue) || 0;
+                            form.setValue("price", formattedValue);
+                            setEnteredAmount(formattedValue);
+                          }}
                         />
                       </FormControl>
                       <FormDescription>

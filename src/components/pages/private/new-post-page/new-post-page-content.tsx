@@ -5,17 +5,43 @@ import { pageLinks } from "@/src/constants";
 import { FC, useState } from "react";
 import NewPostForm from "./new-post-form";
 import NewPostCheckout from "./new-post-checkout";
-import { CreatePostingInput } from "@/src/__generated__/graphql";
+import {
+  CreatePostingInput,
+  District,
+  Maybe,
+  Province,
+  Ward,
+} from "@/src/__generated__/graphql";
 
 interface Props {
-  provinces: { id: string; name: string }[];
+  provinces: Maybe<Province[]> | undefined | [];
+  districts: Maybe<District[]> | undefined | [];
+  wards: Maybe<Ward[]> | undefined | [];
 }
 
-const NewPostPageContent: FC<Props> = ({ provinces }): JSX.Element => {
+const NewPostPageContent: FC<Props> = ({
+  provinces,
+  districts,
+  wards,
+}): JSX.Element => {
+  // Get Provinces & Set Provinces
+
   const [showedContent, setShowedContent] = useState<"form" | "checkout">(
     "checkout"
   );
   const [formValue, setFormValue] = useState<CreatePostingInput>();
+  const [mediaFormValue, setMediaFormValue] = useState<{
+    images: File[];
+    videos: File[];
+  }>({
+    images: [],
+    videos: [],
+  });
+  const [notSubmitValue, setNotSubmitValue] = useState<{
+    ward_id: string;
+    street: string;
+    address_number: string;
+  }>();
 
   return (
     <div>
@@ -40,11 +66,22 @@ const NewPostPageContent: FC<Props> = ({ provinces }): JSX.Element => {
       {showedContent === "form" ? (
         <NewPostForm
           provinces={provinces}
+          districts={districts}
+          wards={wards}
+          formValue={formValue}
           setFormValue={setFormValue}
           setShowedContent={setShowedContent}
+          setMediaFormValue={setMediaFormValue}
+          notSubmitValue={notSubmitValue}
+          setNotSubmitValue={setNotSubmitValue}
         />
       ) : (
-        <NewPostCheckout formValue={formValue} />
+        <NewPostCheckout
+          formValue={formValue}
+          setShowedContent={setShowedContent}
+          previousFormValue={formValue}
+          mediaFormValue={mediaFormValue}
+        />
       )}
     </div>
   );
